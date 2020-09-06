@@ -48,7 +48,7 @@ vector<int> g1() {
     return res;
 }
 
-vector<int> g2() {
+vector<int> g2(...) {
     vector<int> res;
     return res;
 }
@@ -57,13 +57,13 @@ vector<int> g2() {
 int main()
 {
 
-    vector<int> (*p)() = &g2;
-    auto res = p();
+    auto (*p)(...) = &g2;
+    auto res = p(1);
     cout << res.size() << '\n';
 
-    vector< vector<int>(*)() > vg = {&g0, &g1, &g2}; 
-    for (int i=0; i<vg.size(); ++i)
-        cout << i << '\t' << vg[i]().size() << '\n';
+    // vector< vector<int>(*)() > vg = {&g0, &g1, &g2}; 
+    // for (int i=0; i<vg.size(); ++i)
+    //     cout << i << '\t' << vg[i]().size() << '\n';
 
     return 0;
     
