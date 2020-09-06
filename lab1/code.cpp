@@ -18,6 +18,10 @@ bool prime(int n) {
 }
 
 
+const double    PI = acos(-1),
+                E = exp(1);
+
+
 
 class RanGenerator
 {
@@ -100,7 +104,7 @@ public:
         int t = (x1 + x2) % m;
         x2 = x1;
         x1 = t;
-        return x;
+        return t;
     }
 };
 
@@ -140,20 +144,21 @@ class MMG: public RanGenerator //Merge-memes genarator
 {
 public:
     int a,b,c,m,y,x0;
-    SCG(int a = 3889, int b = 1777, int c = 5641, int m = 9973, int x0 = 1) {
+    MMG(int a = 3889, int b = 1777, int c = 5641, int m = 9973, int x0 = 1301) {
         maxInt = m;
         this -> a = a;          
         this -> b = b;
+        this -> c = c;
         this -> m = m;
         this -> x0 = x0;
-        this -> y = 0;
+        this -> y = 1;
     }
 
     int genInt() {
         int A = (x0*b + c) % m;
         int x = (A*y + x0) % m;
         y = (a * y) % m;
-        return x;
+        return (x-y+m)%m;
     }
 };
 
@@ -183,7 +188,7 @@ class MPM: public RanGenerator //Marsaglia polar method
 {
 public:
     RanGenerator* g;
-    MPM(double m, double sig) {
+    MPM() {
         this -> g = new SCG();
     }
 
@@ -204,12 +209,94 @@ public:
 };
 
 
+class RMG: public RanGenerator //Ratio mem generator
+{
+public:
+    RanGenerator* g;
+    RMG() {
+        this -> g = new SCG();
+    }
+
+    double genReal() {
+        while (1) {
+            double u,v;
+            u = g -> genReal();
+            v = g -> genReal();
+            
+            if (!u)
+                continue;
+
+            double x = sqrt(8/E) * (v - 0.5) / u;
+
+            if (x*x <= 5-4*exp(0.25)*u)
+                continue;
+
+            if (x*x >= 4*exp(-1.35)/u+1.4)
+                continue;
+
+            if (x*x >= -4*log(u))
+                continue;
+
+            return x;
+        }
+    }
+
+};
+
+
+
+class LMDG: public RanGenerator //Log-mem distribution generator
+{
+public:
+    double mu;
+    RanGenerator* g;
+    LMDG(double mu = 1) {
+        this -> mu = mu;
+        this -> g = new SCG();
+    }
+
+    double genReal() {
+        return -mu * log(g -> genReal());
+    }
+};
+
+
+
+class AGDM: public RanGenerator //Arsen gamma distrubution method
+{
+public:
+    double a;
+    RanGenerator* g;
+    AGDM(double a = sqrt(2)) {
+        this -> a = a;
+        this -> g = new SCG();
+    }
+
+    double genReal() {
+        while (1) {
+            double y,x,v,tmp;
+
+            y = tan(PI*(g -> genReal()));
+            x = sqrt(2*a - 1)*y + a - 1;
+            if (x <= 0)
+                continue;
+
+            v = g -> genReal();
+            tmp = (1+y*y)*exp((a-1)*log(x/(a-1))-sqrt(2*a-1)*y);
+            if (v > tmp)
+                continue;
+
+            return x;
+        }
+    }
+};
+
 
 
 
 
 void drawHistogramUniform(int cnt, RanGenerator* g) {
-    int n = 1000;
+    int n = 10000;
     vector<double> numbers = g -> genVecReal(n);
     
     vector<int> dist(cnt);
@@ -233,13 +320,13 @@ void drawHistogramUniform(int cnt, RanGenerator* g) {
 
 
 void drawHistogramNormal(int cnt, double l, double r, RanGenerator* g) {
-    int n = 10000;
+    int n = 100000;
     vector<double> numbers = g -> genVecReal(n);
     vector<int> dist(cnt);
     for (double x:numbers) {
         if (x < l || x > r)
             continue;
-        int p = (x-l) / (r-l) * cnt;
+        int p = (x-l) / (r-l) * cnt + 0.5;
         dist[p]++;
     }
     
@@ -267,6 +354,10 @@ int main()
     cin >> type;
     
     --type;
+
+
+
+
     RanGenerator *gens[10] = {
         new LCG(1777, 7351, 9973),
         new SCG(10, 100, 30),
@@ -275,9 +366,9 @@ int main()
         new MMG(),
         new TSL(0, 3),
         new MPM(),
-        nullptr,
-        nullptr,
-        nullptr
+        new RMG(),
+        new LMDG(),
+        new AGDM()
     };
 
 
@@ -287,6 +378,8 @@ int main()
     if (type >= 5 && type < 8)
         drawHistogramNormal(12, -3, +3, gens[type]);
 
+    if (type >= 8 && type < 10)
+        drawHistogramNormal(20, 0, +5, gens[type]);
 
 
 
