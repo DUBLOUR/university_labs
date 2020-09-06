@@ -1,26 +1,8 @@
 #include<bits/stdc++.h>
 using namespace std;
-typedef long long LL;
-typedef long double LD;
-#define PB push_back
-#define MP make_pair
-
-
-
-bool prime(int n) {
-    if (n < 2)
-        return false;
-
-    for (int i=2; i*i<=n; ++i)
-        if (n%i == 0)
-            return false;
-    return true;
-}
-
 
 const double    PI = acos(-1),
                 E = exp(1);
-
 
 
 class RanGenerator
@@ -54,8 +36,9 @@ public:
 
 class LCG: public RanGenerator //Linear congruential generator
 {
-public:
+private:
     int a,c,m,x;
+public:
     LCG(int a = 1777, int c = 7351, int m = 9973, int x = 0) {
         maxInt = m;
         this -> a = a;
@@ -72,9 +55,10 @@ public:
 
 class SCG: public RanGenerator //Square congruential generator
 {
-public:
+private:
     int d,a,c,m,x;
-    SCG(int d = 3889, int a = 1777, int c = 7351, int m = 9973, int x = 1) {
+public:
+    SCG(int d = 9923, int a = 1777, int c = 7351, int m = 9973, int x = 883) {
         maxInt = m;
         this -> d = d;          
         this -> a = a;
@@ -91,8 +75,9 @@ public:
 
 class LFG: public RanGenerator //Lagged Fibonacci generator
 {
-public:
+private:
     int m,x1,x2;
+public:
     LFG(int m = 9973, int x1 = 3889, int x2 = 7351) {
         maxInt = m;
         this -> m = m;
@@ -113,6 +98,8 @@ public:
 class ICG: public RanGenerator //Inversive congruential generator
 {
 private:
+    int a,c,x,m;
+
     int inverse(long long x) {
         long long res = 1;
         for (int st=m-2; st; st/=2) {
@@ -122,9 +109,7 @@ private:
         }
         return res;
     }
-
 public:
-    int a,c,x,m;
     ICG(int a = 1777, int c = 7351, int m = 9973, int x = 3889) {
         maxInt = m;
         this -> a = a;
@@ -142,8 +127,9 @@ public:
 
 class MMG: public RanGenerator //Merge-memes genarator
 {
-public:
+private:
     int a,b,c,m,y,x0;
+public:
     MMG(int a = 3889, int b = 1777, int c = 5641, int m = 9973, int x0 = 1301) {
         maxInt = m;
         this -> a = a;          
@@ -165,14 +151,14 @@ public:
 
 class TSL: public RanGenerator //Three-sigma limits
 {
-public:
+private:
     double m,sig;
     RanGenerator* g;
-
-    TSL(double m, double sig) {
+public:
+    TSL(double m = 0, double sig = 1) {
         this -> sig = sig;          
         this -> m = m;
-        this -> g = new SCG();
+        this -> g = new LFG();
     }
 
     double genReal() {
@@ -186,10 +172,11 @@ public:
 
 class MPM: public RanGenerator //Marsaglia polar method
 {
-public:
+private:
     RanGenerator* g;
+public:
     MPM() {
-        this -> g = new SCG();
+        this -> g = new LFG();
     }
 
     double genReal() {
@@ -211,10 +198,11 @@ public:
 
 class RMG: public RanGenerator //Ratio mem generator
 {
-public:
+private:
     RanGenerator* g;
+public:
     RMG() {
-        this -> g = new SCG();
+        this -> g = new LFG();
     }
 
     double genReal() {
@@ -247,12 +235,13 @@ public:
 
 class LMDG: public RanGenerator //Log-mem distribution generator
 {
-public:
+private:
     double mu;
     RanGenerator* g;
+public:
     LMDG(double mu = 1) {
         this -> mu = mu;
-        this -> g = new SCG();
+        this -> g = new LFG();
     }
 
     double genReal() {
@@ -264,12 +253,13 @@ public:
 
 class AGDM: public RanGenerator //Arsen gamma distrubution method
 {
-public:
+private:
     double a;
     RanGenerator* g;
+public:
     AGDM(double a = sqrt(2)) {
         this -> a = a;
-        this -> g = new SCG();
+        this -> g = new LFG();
     }
 
     double genReal() {
@@ -293,47 +283,23 @@ public:
 
 
 
-
-
-void drawHistogramUniform(int cnt, RanGenerator* g) {
+void drawHistogram(RanGenerator* g, int cnt=10, double l=0, double r=1, bool showplus=false) {
     int n = 10000;
-    vector<double> numbers = g -> genVecReal(n);
-    
-    vector<int> dist(cnt);
-    for (double x:numbers)
-        dist[floor(x*cnt)]++;
-
-    cout << "  Interval    | Frequency\n";
-    cout << fixed;
-    for (int i=0; i<cnt; ++i) {
-        // cout << "[" << setprecision(2) << double(i)/cnt << "; " << double(i+1)/cnt << ")  |  ";
-        // cout << setprecision(5) << double(dist[i])/n << '\n';
-
-        double l,r,v;
-        l = double(i)/cnt;
-        r = double(i+1)/cnt;
-        v = double(dist[i])/n;        
-        printf("[%.2f; %.2f)  |  %.5f\n", l, r, v);
-    }
-
-}
-
-
-void drawHistogramNormal(int cnt, double l, double r, RanGenerator* g) {
-    int n = 100000;
     vector<double> numbers = g -> genVecReal(n);
     vector<int> dist(cnt);
     for (double x:numbers) {
         if (x < l || x > r)
             continue;
-        int p = (x-l) / (r-l) * cnt + 0.5;
+        int p = (x-l) / (r-l) * cnt;
         dist[p]++;
     }
     
     cout << "   Interval     | Frequency\n";
-    cout << fixed << showpos;
-    for (int i=0; i<cnt; ++i) {
+    cout << fixed;
+    if (showplus) 
+        cout << showpos;
 
+    for (int i=0; i<cnt; ++i) {
         double ln,rn,v;
         ln = i*(r-l)/cnt + l;
         rn = (i+1)*(r-l)/cnt + l;
@@ -343,28 +309,21 @@ void drawHistogramNormal(int cnt, double l, double r, RanGenerator* g) {
 
 }
 
-
-
+// 2, 8 has wierd behaviour
 
 int main()
 {
-
     int type;
-    // type = 6;
     cin >> type;
-    
     --type;
-
-
-
 
     RanGenerator *gens[10] = {
         new LCG(1777, 7351, 9973),
-        new SCG(10, 100, 30),
+        new SCG(9127, 5471, 2143),
         new LFG(),
         new ICG(),
         new MMG(),
-        new TSL(0, 3),
+        new TSL(0, 0.5),
         new MPM(),
         new RMG(),
         new LMDG(),
@@ -373,15 +332,13 @@ int main()
 
 
     if (type >= 0 && type < 5)
-        drawHistogramUniform(10, gens[type]);
+        drawHistogram(gens[type], 10);
     
     if (type >= 5 && type < 8)
-        drawHistogramNormal(12, -3, +3, gens[type]);
+        drawHistogram(gens[type], 12, -3, +3, true);
 
     if (type >= 8 && type < 10)
-        drawHistogramNormal(20, 0, +5, gens[type]);
-
-
+        drawHistogram(gens[type], 20, 0, 5);
 
 
 }
