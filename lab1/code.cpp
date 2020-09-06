@@ -6,22 +6,6 @@ typedef long double LD;
 #define MP make_pair
 
 
-template <typename T1, typename T2>
-ostream& operator << (ostream& out, pair<T1, T2>& p) {
-    out << p.F << " " << p.S; 
-    return out;
-}
-
-
-
-const int   N = 1e5 + 10,
-            INF = 1e9,
-            MOD = 1e9 + 7;
-const LL    INFL = 1e18,
-            MODL = 1e9 + 7;
-const LD    EPS = 1e-8,
-            PI = acosl(-1);
-
 
 bool prime(int n) {
     if (n < 2)
@@ -34,15 +18,17 @@ bool prime(int n) {
 }
 
 
+
 class RanGenerator
 {
 protected:
     int maxInt;
-    char type;
 public:
-    virtual int genInt()=0;
-    
-    double genReal() {
+    virtual int genInt() {
+        return 0;
+    }
+
+    virtual double genReal() {
         return double(genInt())/maxInt;
     }
 
@@ -62,13 +48,12 @@ public:
 };  
 
 
-class LCG: public RanGenerator
+class LCG: public RanGenerator //Linear congruential generator
 {
 public:
     int a,c,m,x;
     LCG(int a = 1777, int c = 7351, int m = 9973, int x = 0) {
         maxInt = m;
-        type = 0;
         this -> a = a;
         this -> c = c;
         this -> m = m;
@@ -81,13 +66,12 @@ public:
 };
 
 
-class SCG: public RanGenerator
+class SCG: public RanGenerator //Square congruential generator
 {
 public:
     int d,a,c,m,x;
     SCG(int d = 3889, int a = 1777, int c = 7351, int m = 9973, int x = 1) {
         maxInt = m;
-        type = 0;
         this -> d = d;          
         this -> a = a;
         this -> m = m;
@@ -101,28 +85,114 @@ public:
 };
 
 
+class TSL: public RanGenerator //Three-sigma limits
+{
+public:
+public:
+    double m,sig;
+    RanGenerator* g;
+
+    TSL(double m, double sig) {
+        this -> sig = sig;          
+        this -> m = m;
+        this -> g = new SCG();
+    }
+
+    int genInt() {
+        return 0;
+    }
+
+    double genReal() {
+        double sum = 0;
+        for (int i=0; i<12; ++i)
+            sum += g -> genReal();
+        return m + (sum - 6)*sig;
+    }
+};
+
+
+
+
+void drawHistogramUniform(int cnt, RanGenerator* g) {
+    int n = 1000;
+    vector<double> numbers = g -> genVecReal(n);
+    
+    vector<int> dist(cnt);
+    for (double x:numbers)
+        dist[floor(x*cnt)]++;
+
+    cout << "  Interval    | Frequency\n";
+    cout << fixed;
+    for (int i=0; i<cnt; ++i) {
+        // cout << "[" << setprecision(2) << double(i)/cnt << "; " << double(i+1)/cnt << ")  |  ";
+        // cout << setprecision(5) << double(dist[i])/n << '\n';
+
+        double l,r,v;
+        l = double(i)/cnt;
+        r = double(i+1)/cnt;
+        v = double(dist[i])/n;        
+        printf("[%.2f; %.2f)  |  %.5f\n", l, r, v);
+    }
+
+}
+
+
+void drawHistogramNormal(int cnt, double l, double r, RanGenerator* g) {
+    int n = 10000;
+    vector<double> numbers = g -> genVecReal(n);
+    
+    vector<int> dist(cnt);
+    for (double x:numbers) {
+        if (x < l || x > r)
+            continue;
+        int p = (x-l) / (r-l) * cnt;
+        dist[p]++;
+    }
+    
+    cout << "   Interval     | Frequency\n";
+    cout << fixed << showpos;
+    for (int i=0; i<cnt; ++i) {
+
+        double ln,rn,v;
+        ln = i*(r-l)/cnt + l;
+        rn = (i+1)*(r-l)/cnt + l;
+        v = double(dist[i])/n;        
+        printf("[%+.2f; %+.2f)  |  %.5f\n", ln, rn, v);
+    }
+
+}
+
 
 
 
 int main()
 {
 
+    int type;
+    // type = 6;
+    cin >> type;
+    
+    --type;
+    RanGenerator *gens[10] = {
+        new LCG(1777, 7351, 9973),
+        new SCG(10, 100, 30),
+        nullptr,
+        nullptr,
+        nullptr,
+        new TSL(0, 3),
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr
+    };
 
-    RanGenerator *x = new LCG(1777, 7351, 9973);
-    RanGenerator *y = new SCG(10, 100, 30);
-    cout << x -> genInt() << '\n';
-    cout << y -> genInt() << '\n';
-    cout << y -> genReal() << '\n';
 
-    for (int i=0; i<10; ++i)
-        cout << y -> genInt() << ' ';
-    cout << '\n';
+    if (type >= 0 && type < 5)
+        drawHistogramUniform(10, gens[type]);
+    
+    if (type >= 5 && type < 8)
+        drawHistogramNormal(12, -3, +3, gens[type]);
 
-    for (int i=10000; ; --i)
-        if (prime(i)) {
-            cout << i << ", ";
-            break;
-        }
 
 
 
