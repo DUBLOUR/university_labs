@@ -85,9 +85,81 @@ public:
 };
 
 
-class TSL: public RanGenerator //Three-sigma limits
+class LFG: public RanGenerator //Lagged Fibonacci generator
 {
 public:
+    int m,x1,x2;
+    LFG(int m = 9973, int x1 = 3889, int x2 = 7351) {
+        maxInt = m;
+        this -> m = m;
+        this -> x1 = x1;        
+        this -> x2 = x2;        
+    }
+
+    int genInt() {
+        int t = (x1 + x2) % m;
+        x2 = x1;
+        x1 = t;
+        return x;
+    }
+};
+
+
+
+class ICG: public RanGenerator //Inversive congruential generator
+{
+private:
+    int inverse(long long x) {
+        long long res = 1;
+        for (int st=m-2; st; st/=2) {
+            if (st%2)
+                res = (res * x) % m;
+            x = (x*x)%m;                                                  
+        }
+        return res;
+    }
+
+public:
+    int a,c,x,m;
+    ICG(int a = 1777, int c = 7351, int m = 9973, int x = 3889) {
+        maxInt = m;
+        this -> a = a;
+        this -> c = c;
+        this -> m = m;
+        this -> x = x;
+    }
+
+    int genInt() {
+        return x = ((long long) a * inverse(x) + c) % m;
+    }
+};
+
+
+
+class MMG: public RanGenerator //Merge-memes genarator
+{
+public:
+    int a,b,c,m,y,x0;
+    SCG(int a = 3889, int b = 1777, int c = 5641, int m = 9973, int x0 = 1) {
+        maxInt = m;
+        this -> a = a;          
+        this -> b = b;
+        this -> m = m;
+        this -> x0 = x0;
+        this -> y = 0;
+    }
+
+    int genInt() {
+        int A = (x0*b + c) % m;
+        int x = (A*y + x0) % m;
+        y = (a * y) % m;
+        return x;
+    }
+};
+
+
+class TSL: public RanGenerator //Three-sigma limits
+{
 public:
     double m,sig;
     RanGenerator* g;
@@ -98,10 +170,6 @@ public:
         this -> g = new SCG();
     }
 
-    int genInt() {
-        return 0;
-    }
-
     double genReal() {
         double sum = 0;
         for (int i=0; i<12; ++i)
@@ -109,6 +177,33 @@ public:
         return m + (sum - 6)*sig;
     }
 };
+
+
+class MPM: public RanGenerator //Marsaglia polar method
+{
+public:
+    RanGenerator* g;
+    MPM(double m, double sig) {
+        this -> g = new SCG();
+    }
+
+    double genReal() {
+        double sum = 1;
+        double u1,u2;
+    
+        while (sum >= 1) {
+            u1 = 2*(g -> genReal())-1;
+            u2 = 2*(g -> genReal())-1;
+
+            sum = u1*u1 + u2*u2;
+        }
+
+        double x = u1 * sqrt( -2*log(sum)/sum );
+        return x;
+    }
+};
+
+
 
 
 
@@ -140,7 +235,6 @@ void drawHistogramUniform(int cnt, RanGenerator* g) {
 void drawHistogramNormal(int cnt, double l, double r, RanGenerator* g) {
     int n = 10000;
     vector<double> numbers = g -> genVecReal(n);
-    
     vector<int> dist(cnt);
     for (double x:numbers) {
         if (x < l || x > r)
@@ -176,11 +270,11 @@ int main()
     RanGenerator *gens[10] = {
         new LCG(1777, 7351, 9973),
         new SCG(10, 100, 30),
-        nullptr,
-        nullptr,
-        nullptr,
+        new LFG(),
+        new ICG(),
+        new MMG(),
         new TSL(0, 3),
-        nullptr,
+        new MPM(),
         nullptr,
         nullptr,
         nullptr
