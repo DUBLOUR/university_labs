@@ -58,7 +58,7 @@ class SCG: public RanGenerator //Square congruential generator
 private:
     int d,a,c,m,x;
 public:
-    SCG(int d = 9923, int a = 1777, int c = 7351, int m = 9973, int x = 883) {
+    SCG(int d = 1292, int a = 1810, int c = 3102, int m = 4913, int x = 8014) {
         maxInt = m;
         this -> d = d;          
         this -> a = a;
@@ -68,7 +68,7 @@ public:
     }
 
     int genInt() {
-        return x = ((long long) d*x*x + a*x + c) % m;
+        return x = ((long long) d*(x*x)%m + a*x + c) % m;
     }
 };
 
@@ -202,7 +202,7 @@ private:
     RanGenerator* g;
 public:
     RMG() {
-        this -> g = new LFG();
+        g = new LFG();
     }
 
     double genReal() {
@@ -216,11 +216,11 @@ public:
 
             double x = sqrt(8/E) * (v - 0.5) / u;
 
-            if (x*x <= 5-4*exp(0.25)*u)
-                continue;
+            // if (x*x <= 5-4*exp(0.25)*u)
+            //     continue;
 
-            if (x*x >= 4*exp(-1.35)/u+1.4)
-                continue;
+            // if (x*x >= 4*exp(-1.35)/u+1.4)
+            //     continue;
 
             if (x*x >= -4*log(u))
                 continue;
@@ -283,7 +283,7 @@ public:
 
 
 
-void drawHistogram(RanGenerator* g, int cnt=10, double l=0, double r=1, bool showplus=false) {
+void drawHistogram(RanGenerator* g, int cnt=10, double l=0, double r=1, bool show_plus=false, bool draw_bar=true) {
     int n = 10000;
     vector<double> numbers = g -> genVecReal(n);
     vector<int> dist(cnt);
@@ -296,34 +296,73 @@ void drawHistogram(RanGenerator* g, int cnt=10, double l=0, double r=1, bool sho
     
     cout << "   Interval     | Frequency\n";
     cout << fixed;
-    if (showplus) 
+    if (show_plus) 
         cout << showpos;
+
 
     for (int i=0; i<cnt; ++i) {
         double ln,rn,v;
         ln = i*(r-l)/cnt + l;
         rn = (i+1)*(r-l)/cnt + l;
         v = double(dist[i])/n;        
-        printf("[%+.2f; %+.2f)  |  %.5f\n", ln, rn, v);
+        
+        string bar = "";
+        if (draw_bar) {
+            int tmp = round(v*cnt*10);
+            while (tmp>1) {
+                bar += "#";
+                tmp -= 2;
+            }
+            if (tmp)
+                bar += ":";
+        }
+
+        printf("[%+.2f; %+.2f)  |  %.5f  %s\n", ln, rn, v, bar.c_str());
     }
 
 }
 
-// 2, 8 has wierd behaviour
+void find_good_constants() {
+    auto g = new LFG();
+    while (1) {
+        int d,a,c,x,m;
+        d = g -> genInt();
+        a = g -> genInt();
+        c = g -> genInt();
+        m = g -> genInt() + 1;
+        x = g -> genInt();
+
+        auto g2 = new SCG(d, a, c, m, x);
+        set<int> s;
+        int i,last = 0;
+        for (i=0; !s.count(last); ++i) {
+            s.insert(last);
+            last = g2 -> genInt();
+        }
+
+        if (i > 2000)
+            cout << '\t' << d << ' ' << a << ' ' << c << ' ' << m << ' ' << x << '\t' << i << '\n';
+    }
+
+}
+
 
 int main()
 {
+
+    // find_good_constants();
+
     int type;
     cin >> type;
     --type;
 
     RanGenerator *gens[10] = {
         new LCG(1777, 7351, 9973),
-        new SCG(9127, 5471, 2143),
+        new SCG(4459, 2164, 6623, 8788, 5437),
         new LFG(),
         new ICG(),
         new MMG(),
-        new TSL(0, 0.5),
+        new TSL(0, 0.8),
         new MPM(),
         new RMG(),
         new LMDG(),
