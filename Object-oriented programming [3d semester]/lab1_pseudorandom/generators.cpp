@@ -49,7 +49,6 @@ int LFG::genInt() {
 }
 
 
-
 int ICG::inverse(long long x) {
     long long res = 1;
     for (int st=m-2; st; st/=2) {
@@ -59,6 +58,7 @@ int ICG::inverse(long long x) {
     }
     return res;
 }
+
 ICG::ICG(int a, int c, int m, int x) {
     maxInt = m;
     this -> a = a;
@@ -70,7 +70,6 @@ ICG::ICG(int a, int c, int m, int x) {
 int ICG::genInt() {
     return x = ((long long) a * inverse(x) + c) % m;
 }
-
 
 
 MMG::MMG(int a, int b, int c, int m, int x0) {
@@ -91,10 +90,10 @@ int MMG::genInt() {
 }
 
 
-TSL::TSL(double m, double sig) {
+TSL::TSL(double m, double sig, RanIntGenerator* g) {
     this -> sig = sig;          
     this -> m = m;
-    this -> g = new LFG();
+    this -> g = g;
 }
 
 double TSL::genReal() {
@@ -105,8 +104,8 @@ double TSL::genReal() {
 }
 
 
-MPM::MPM() {
-    this -> g = new LFG();
+MPM::MPM(RanIntGenerator* g) {
+    this -> g = g;
 }
 
 double MPM::genReal() {
@@ -125,8 +124,8 @@ double MPM::genReal() {
 }
 
 
-RMG::RMG() {
-    g = new LFG();
+RMG::RMG(RanIntGenerator* g) {
+    this -> g = new LFG();
 }
 
 double RMG::genReal() {
@@ -154,8 +153,7 @@ double RMG::genReal() {
 }
 
 
-
-LMDG::LMDG(double mu) {
+LMDG::LMDG(double mu, RanIntGenerator* g) {
     this -> mu = mu;
     this -> g = new LFG();
 }
@@ -165,8 +163,7 @@ double LMDG::genReal() {
 }
 
 
-
-AGDM::AGDM(double a) {
+AGDM::AGDM(double a, RanIntGenerator* g) {
     this -> a = a;
     this -> g = new LFG();
 }

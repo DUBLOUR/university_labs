@@ -25,8 +25,9 @@ public:
     int genInt();
 };
 
-
-class LFG: public RanIntGenerator //Lagged Fibonacci generator
+    
+    //Lagged Fibonacci generator
+class LFG: public RanIntGenerator 
 {
 private:
     int m,x1,x2;
@@ -36,8 +37,8 @@ public:
 };
 
 
-
-class ICG: public RanIntGenerator //Inversive congruential generator
+    //Inversive congruential generator
+class ICG: public RanIntGenerator 
 {
 private:
     int a,c,x,m;
@@ -48,8 +49,8 @@ public:
 };
 
 
-
-class MMG: public RanIntGenerator //Merge-memes genarator
+    //Merge-memes genarator
+class MMG: public RanIntGenerator 
 {
 private:
     int a,b,c,m,y,x0;
@@ -59,51 +60,52 @@ public:
 };
 
 
-class TSL: public RanRealGenerator //Three-sigma limits
+    //Three-sigma limits
+class TSL: public RanRealGenerator 
 {
 private:
     double m,sig;
 public:
-    TSL(double m = 0, double sig = 1);
+    TSL(double m = 0, double sig = 1, RanIntGenerator* g = new LFG());
     double genReal();
 };
 
 
-class MPM: public RanRealGenerator //Marsaglia polar method
+    //Marsaglia polar method
+class MPM: public RanRealGenerator 
 {
-private:
 public:
-    MPM();
+    MPM(RanIntGenerator* g = new LFG());
     double genReal();
 };
 
-
-class RMG: public RanRealGenerator //Ratio mem generator
+    
+    //Ratio mem generator
+class RMG: public RanRealGenerator 
 {
-private:
 public:
-    RMG();
+    RMG(RanIntGenerator* g = new LFG());
     double genReal();
 };
 
-
-
-class LMDG: public RanRealGenerator //Log-mem distribution generator
+    
+    //Log-mem distribution generator
+class LMDG: public RanRealGenerator 
 {
 private:
     double mu;
 public:
-    LMDG(double mu = 1);
+    LMDG(double mu = 1, RanIntGenerator* g = new LFG());
     double genReal();
 };
 
 
-
-class AGDM: public RanRealGenerator //Arsen gamma distrubution method
+    //Arsen gamma distrubution method
+class AGDM: public RanRealGenerator 
 {
 private:
     double a;
 public:
-    AGDM(double a = sqrt(2));
+    AGDM(double a = sqrt(2), RanIntGenerator* g = new LFG());
     double genReal();
 };

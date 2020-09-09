@@ -18,14 +18,13 @@ void draw_row(measure m, double fastest_op, int bar_max_width = 44) {
         bar += "#";
     if (bar_len == 1)
         bar += ":";
-    while (bar.size() < bar_max_width) 
-        bar += " ";
-
+    
     printf(
-        " %-3s  %-12s  %.5e %s%d%%\n", 
+        " %-3s  %-12s  %.5e %-*s%d%%\n", 
         m.operation.c_str(), 
         m.type.c_str(), 
         m.op_per_sec, 
+        bar_max_width,
         bar.c_str(),
         percent);
     

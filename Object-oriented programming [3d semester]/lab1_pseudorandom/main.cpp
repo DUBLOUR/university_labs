@@ -91,13 +91,14 @@ int main()
     cin >> type;
     cout << '\n';
 
+
     RanGenerator *gens[10] = {
         new LCG(1777, 7351, 9973),
         new SCG(4459, 2164, 6623, 8788, 5437),
         new LFG(),
         new ICG(),
         new MMG(),
-        new TSL(0, 0.8),
+        new TSL(0, 0.8, new ICG()),
         new MPM(),
         new RMG(),
         new LMDG(),

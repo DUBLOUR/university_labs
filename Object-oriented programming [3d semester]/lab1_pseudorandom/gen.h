@@ -25,8 +25,9 @@ public:
 class RanRealGenerator: public RanGenerator
 {
 protected:
-    RanGenerator* g;
+    RanIntGenerator* g;
 public:
+    // virtual ~RanRealGenerator() {delete g;}
     virtual double genReal()=0;
     vector<double> genVecReal(int n);
 };  
