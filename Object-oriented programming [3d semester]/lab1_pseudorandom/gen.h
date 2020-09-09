@@ -16,7 +16,7 @@ class RanIntGenerator: public RanGenerator
 protected:
     int maxInt;
 public:
-    virtual int genInt();
+    virtual int genInt()=0;
     virtual double genReal();
     vector<int> genVecInt(int n);
 };  

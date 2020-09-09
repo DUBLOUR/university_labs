@@ -10,15 +10,12 @@ vector<double> RanGenerator::genVecReal(int n) {
 }
 
 
-int RanIntGenerator::genInt() {
-    return 0;
-}
-
 
 double RanIntGenerator::genReal() {
     return double(genInt())/maxInt;
 
 }
+
 
 vector<int> RanIntGenerator::genVecInt(int n) {
     vector<int> res(n);
