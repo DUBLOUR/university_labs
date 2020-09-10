@@ -93,11 +93,6 @@ public:
 
 
 
-
-
-
-
-
 void f() {
 
     Gen().print_func_1("int", "+", "plus");
@@ -107,7 +102,6 @@ void f() {
     Gen().print_func_2("__int128", "*", "mult", "%", "mod", true);
     
 }
-
 
 
 
