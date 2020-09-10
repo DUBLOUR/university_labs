@@ -36,6 +36,18 @@ void draw_row(measure m, double fastest_op, int bar_max_width = 44) {
 
 
 int main() {
+    char y1[] = "mex";
+    char y2[] = "mexxxx";
+    char* x;
+    if (true) {
+        char* x = "mexx";
+    } else {
+        char* x = "mexxxx";      
+    }
+    x = y2;
+    printf("%s", x);
+
+
     measure m;
     m.operation = "+";
     m.type = "int";
