@@ -1,11 +1,9 @@
 #include<bits/stdc++.h>
-#include <typeinfo>
 using namespace std;
 typedef long long LL;
 #define PB push_back
 
     
-
 class LongInt
 {
 private:
@@ -67,9 +65,6 @@ public:
         normalize();
     }
 
-    // LongInt(char x[]) {
-    //     (*this) = LongInt(string(x));
-    // }
 
     LongInt(long long x = 0) {
         is_pos = true;
@@ -102,14 +97,6 @@ public:
         normalize();
     }
 
-    // &LongInt(string s) {
-    //     (*this) = LongInt(s);
-    // }
-    
-    // &LongInt(long long x) {
-    //     (*this) = LongInt(x);
-    // }
-
 
     string str(bool show_plus = false) {
         // cout << "# " << v.size() << ": "; for (LL x:v) cout << x << ", "; cout << '\n';
@@ -139,28 +126,14 @@ public:
             bool need_change_sign = false;
             if (less_then(x, y, true)) // |x| < |y|
             {
-                if (x.is_pos) { // x < 0 <= y; we need x-y <=> -(|y| - |x|)
+                if (x.is_pos) { 
                     need_change_sign = true;
                     y.is_pos = true;
                 }
                 swap(x, y);
-
-                // if (x.is_pos) { 
-                //     // x >= 0 > y; we need x - y
-                //     y.is_pos = true;
-                //     // x >= y >= 0; we need x + y
-                // }
-
-                // swap(x, y); // now |x| > |y|
-                // need_change_sign = true;
             }
 
-
-                    
-                
-
             // now: x >= y; we need x - y
-
             for (int i=0; i<y.v.size(); ++i) {
                 x.v[i] -= y.v[i];
                 if (x.v[i] < 0) {
@@ -190,7 +163,7 @@ public:
         return res;
     }
 
-
+        // *= base^m
     LongInt shift(int m) {
         assert(m >= 0);
         LongInt res = *this;
@@ -205,13 +178,14 @@ public:
             return !x.is_pos;
 
         if (x.v.size() != y.v.size())
-            return x.v.size() < y.v.size();
+            return (x.v.size() < y.v.size()) ^ !x.is_pos;
 
         for (int i=x.v.size()-1; i>=0; --i)
             if (x.v[i] != y.v[i])
-                return x.v[i] < y.v[i];
+                return (x.v[i] < y.v[i]) ^ !x.is_pos;
         return false;
     }
+
 
     bool operator<(LongInt x) {
         return less_then((*this), x);
@@ -245,6 +219,12 @@ public:
         (*this) = add((*this), x);
     }
 
+    LongInt operator-() {
+        LongInt res = *this;
+        res.is_pos ^= 1;
+        return res;
+    }    
+
     LongInt operator-(LongInt x) {
         x.is_pos ^= 1;
         return add((*this), x);
@@ -254,7 +234,6 @@ public:
         x.is_pos ^= 1;
         (*this) = add((*this), x);
     }    
-
     
     LongInt operator*(LongInt x) {
         return mult_method(*this, x);
@@ -262,6 +241,10 @@ public:
 
     void operator*=(LongInt x) {
         (*this) = (*this) * x;
+    }    
+
+    void operator=(const char x[]) {
+        (*this) = LongInt(string(x));
     }    
 
 };
@@ -281,12 +264,12 @@ std::istream& operator>> (std::istream &in, LongInt& x) {
 
 
 
-
 class Multiplex
 {
 public:
     Multiplex(){}
 
+        // 0: Grade-school multiplication;     O(N^2)
     static LongInt Stupid(LongInt a, LongInt b) 
     {
         LongInt res;
@@ -313,7 +296,7 @@ public:
         return res;
     }
 
-
+        // 1: Karatsuba multiplication;     O(N^1.58)
     static LongInt Karatsuba(LongInt x, LongInt y) 
     {
         if (x.v.size() > y.v.size())
@@ -335,10 +318,6 @@ public:
                 if (i < y.v.size())
                     res.v[i] += tmp * y.v[i];
             }
-            // while (res.v[i] > LongInt::base) {
-            //     res.v[i+1] += res.v[i] / LongInt::base;
-            //     res.v[i++] %= LongInt::base;
-            // }
             res.is_pos = sign;
             res.normalize();
             return res;
@@ -347,22 +326,20 @@ public:
         LongInt a,b,c,d,ac,bd,s;
         int m = y.v.size() / 2;
 
-        // x = a * base^m + b
+            // x = a * base^m + b
         a = LongInt(x.v, m);
         b = LongInt(x.v, 0, m);
 
         c = LongInt(y.v, m);
         d = LongInt(y.v, 0, m);
         
-        // x*y = ac * base^(2m) + (ad + bc) * base^m + bd
-        // x*y = ac * base^(2m) + ((a+b)*(c+d) - ac - bd) * base^m + bd
-        // x*y = ac * base^(2m) + (s - ac - bd) * base^m + bd
-        
+            // x*y = ac * base^(2m) + (ad + bc) * base^m + bd
+            // x*y = ac * base^(2m) + ((a+b)*(c+d) - ac - bd) * base^m + bd
+            // x*y = ac * base^(2m) + (s - ac - bd) * base^m + bd
         ac = a*c;
         bd = b*d;
         s = (a+b) * (c+d);
-
-        cout << x << ' ' << y << '\t' << a << ' ' << b << ' ' << c << ' ' << d << '\t' << ac << ' ' << bd << ' ' << s << '\n';
+        // cout << x << ' ' << y << '\t' << a << ' ' << b << ' ' << c << ' ' << d << '\t' << ac << ' ' << bd << ' ' << s << '\n';
 
         LongInt res;
         res = ac.shift(2*m);
@@ -378,7 +355,6 @@ public:
 
 
 
-
 LongInt (*LongInt::mult_method)(LongInt, LongInt) = &Multiplex::Stupid;
 
 int main() 
@@ -386,13 +362,11 @@ int main()
     LongInt::mult_method = &Multiplex::Karatsuba;
 
     LongInt x,y;
-    
-    x = string("-21431974198264721");
-    y = string("9034795873215");
+    x = LongInt("-21431974198264721");
+    y = "9034795873215";
     cout << x << " * " << y << " = \n" << x*y << '\n';
     cout << LongInt("-193633512041332459504923348015") << '\n';
 
-    // cout << LongInt(12) * LongInt(34) << '\n';
     cout << '\n';
     x = 123;
     y = 15;
