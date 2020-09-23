@@ -10,7 +10,7 @@ class LongInt
 {
 private:
 public:
-    const static int base_size = 3;
+    const static int base_size = 3; // Prefer be <= 9
     const static LL base = 1000; // Must be 10^base_size
     static LongInt (*mult_method)(LongInt, LongInt);
 
@@ -47,6 +47,7 @@ public:
                 only_digits = false;
                 return;
             }
+        assert(only_digits);
 
         reverse(s.begin(), s.end());
         LL accum = 0;
@@ -87,6 +88,20 @@ public:
         normalize();
     }
 
+
+    LongInt(vector<LL>& a, int l=0, int r=-1) {
+        if (r == -1 || r > a.size())
+            r = a.size();
+        if (r < l || l >= a.size()) 
+            l = r = 0;
+
+        is_pos = true;
+        v.resize(r-l);
+        for (int i=0; i<v.size(); ++i)
+            v[i] = a[l + i];
+        normalize();
+    }
+
     // &LongInt(string s) {
     //     (*this) = LongInt(s);
     // }
@@ -118,27 +133,153 @@ public:
         return res;
     }
 
-    
-    void setMultAlgo(LongInt (*method)(LongInt, LongInt)) {
-        mult_method = method;
+
+    LongInt add(LongInt x, LongInt y) {    
+        if (x.is_pos != y.is_pos) {
+            bool need_change_sign = false;
+            if (less_then(x, y, true)) // |x| < |y|
+            {
+                if (x.is_pos) { // x < 0 <= y; we need x-y <=> -(|y| - |x|)
+                    need_change_sign = true;
+                    y.is_pos = true;
+                }
+                swap(x, y);
+
+                // if (x.is_pos) { 
+                //     // x >= 0 > y; we need x - y
+                //     y.is_pos = true;
+                //     // x >= y >= 0; we need x + y
+                // }
+
+                // swap(x, y); // now |x| > |y|
+                // need_change_sign = true;
+            }
+
+
+                    
+                
+
+            // now: x >= y; we need x - y
+
+            for (int i=0; i<y.v.size(); ++i) {
+                x.v[i] -= y.v[i];
+                if (x.v[i] < 0) {
+                    x.v[i] += base;
+                    x.v[i+1] -= 1;
+                }
+            }
+            x.is_pos ^= need_change_sign;
+            x.normalize();
+
+            return x;
+        }
+
+        LongInt res;
+        res.is_pos = x.is_pos;
+        res.v.resize(max(x.v.size(), y.v.size())+1);
+        res.v[0] = x.v[0] + y.v[0];
+        for (int i=1; i<res.v.size(); ++i) {
+            res.v[i] = res.v[i-1] / base;
+            res.v[i-1] %= base;
+
+            if (i < x.v.size()) res.v[i] += x.v[i];
+            if (i < y.v.size()) res.v[i] += y.v[i];
+        }
+
+        res.normalize();
+        return res;
     }
 
 
-    LongInt mult(LongInt x) {
-        return mult_method(*this, x);
+    LongInt shift(int m) {
+        assert(m >= 0);
+        LongInt res = *this;
+        vector<LL> tmp(m);
+        res.v.insert(res.v.begin(), tmp.begin(), tmp.end());
+        return res;
     }
+
+
+    bool less_then(LongInt x, LongInt y, bool by_absolute = false) {
+        if (x.is_pos != y.is_pos && !by_absolute)
+            return !x.is_pos;
+
+        if (x.v.size() != y.v.size())
+            return x.v.size() < y.v.size();
+
+        for (int i=x.v.size()-1; i>=0; --i)
+            if (x.v[i] != y.v[i])
+                return x.v[i] < y.v[i];
+        return false;
+    }
+
+    bool operator<(LongInt x) {
+        return less_then((*this), x);
+    }
+
+    bool operator<=(LongInt x) {
+        return !less_then(x, (*this));
+    }
+
+    bool operator>(LongInt x) {
+        return less_then(x, (*this));
+    }
+
+    bool operator>=(LongInt x) {
+        return !less_then((*this), x);
+    }
+
+    bool operator==(LongInt x) {
+        return x.is_pos == is_pos && x.v == v;
+    }
+
+    bool operator!=(LongInt x) {
+        return !((*this) == x);
+    }
+
+    LongInt operator+(LongInt x) {
+        return add((*this), x);
+    }
+
+    void operator+=(LongInt x) {
+        (*this) = add((*this), x);
+    }
+
+    LongInt operator-(LongInt x) {
+        x.is_pos ^= 1;
+        return add((*this), x);
+    }    
+
+    void operator-=(LongInt x) {
+        x.is_pos ^= 1;
+        (*this) = add((*this), x);
+    }    
 
     
     LongInt operator*(LongInt x) {
-        return mult(x);
+        return mult_method(*this, x);
     }    
 
-
     void operator*=(LongInt x) {
-        (*this) = mult(x);
+        (*this) = (*this) * x;
     }    
 
 };
+
+
+std::ostream& operator<< (std::ostream &out, LongInt x) {
+    return out << x.str();
+}
+
+
+std::istream& operator>> (std::istream &in, LongInt& x) {
+    string s;
+    cin >> s;
+    x = LongInt(s);
+    return in;
+}
+
+
 
 
 class Multiplex
@@ -173,29 +314,76 @@ public:
     }
 
 
+    static LongInt Karatsuba(LongInt x, LongInt y) 
+    {
+        if (x.v.size() > y.v.size())
+            swap(x, y);
+        
+        if (x.v.empty())
+            return LongInt();
+
+        bool sign = x.is_pos == y.is_pos;
+
+        if (x.v.size() == 1) {
+            LongInt res;
+            res.v.resize(y.v.size()+1);
+            LL tmp = x.v[0];
+            res.v[0] = tmp * y.v[0];
+            for (int i=1; i<res.v.size(); ++i) {
+                res.v[i] = res.v[i-1] / LongInt::base;
+                res.v[i-1] %= LongInt::base;
+                if (i < y.v.size())
+                    res.v[i] += tmp * y.v[i];
+            }
+            // while (res.v[i] > LongInt::base) {
+            //     res.v[i+1] += res.v[i] / LongInt::base;
+            //     res.v[i++] %= LongInt::base;
+            // }
+            res.is_pos = sign;
+            res.normalize();
+            return res;
+        }
+        
+        LongInt a,b,c,d,ac,bd,s;
+        int m = y.v.size() / 2;
+
+        // x = a * base^m + b
+        a = LongInt(x.v, m);
+        b = LongInt(x.v, 0, m);
+
+        c = LongInt(y.v, m);
+        d = LongInt(y.v, 0, m);
+        
+        // x*y = ac * base^(2m) + (ad + bc) * base^m + bd
+        // x*y = ac * base^(2m) + ((a+b)*(c+d) - ac - bd) * base^m + bd
+        // x*y = ac * base^(2m) + (s - ac - bd) * base^m + bd
+        
+        ac = a*c;
+        bd = b*d;
+        s = (a+b) * (c+d);
+
+        cout << x << ' ' << y << '\t' << a << ' ' << b << ' ' << c << ' ' << d << '\t' << ac << ' ' << bd << ' ' << s << '\n';
+
+        LongInt res;
+        res = ac.shift(2*m);
+        res += (s - ac - bd).shift(m);
+        res += bd;
+        res.is_pos = sign;
+        res.normalize();
+        return res;
+    }
+
 
 };
 
 
 
-std::ostream& operator<< (std::ostream &out, LongInt x) {
-    return out << x.str();
-}
-
-std::istream& operator>> (std::istream &in, LongInt& x) {
-    string s;
-    cin >> s;
-    x = LongInt(s);
-    return in;
-}
-
 
 LongInt (*LongInt::mult_method)(LongInt, LongInt) = &Multiplex::Stupid;
 
-
 int main() 
 {
-    LongInt::mult_method = &Multiplex::Stupid;
+    LongInt::mult_method = &Multiplex::Karatsuba;
 
     LongInt x,y;
     
@@ -204,8 +392,20 @@ int main()
     cout << x << " * " << y << " = \n" << x*y << '\n';
     cout << LongInt("-193633512041332459504923348015") << '\n';
 
+    // cout << LongInt(12) * LongInt(34) << '\n';
+    cout << '\n';
     x = 123;
-    y = 5;
-    cout << x*y << '\n';
+    y = 15;
+    cout << (x*y).shift(2) << '\n';
+
+    // cout << LongInt(429) + LongInt(15) << '\n';
+    // cout << LongInt(429) - LongInt(15) << '\n';
+    // cout << LongInt(-421) - LongInt(1500) << '\n';
+
+    // for (int i=0; i<100; ++i) {
+    //     LL x = rand()*2ll - rand();
+    //     LL y = rand()*2ll - rand();
+    //     cout << x+y << '' << LongInt(x) + LongInt(y) << "\t" << x << ' ' << y << '\n';
+    // }
     
 }
