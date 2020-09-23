@@ -4,19 +4,19 @@ using namespace std;
 typedef long long LL;
 #define PB push_back
 
-const int   base_size = 3;
-const LL    base = 1000; // Must be 10^base_size
     
 
 class LongInt
 {
 private:
 public:
-    
+    const static int base_size = 3;
+    const static LL base = 1000; // Must be 10^base_size
+    static LongInt (*mult_method)(LongInt, LongInt);
+
     bool is_pos;
     vector<LL> v;
-    static LongInt (*mult_method)(LongInt, LongInt);
-    static int mem;
+    
 
     void normalize() {
         while (v.size() > 1 && !v.back())
@@ -146,36 +146,23 @@ class Multiplex
 public:
     Multiplex(){}
 
-    static LongInt stupid(LongInt a, LongInt b) {
-        return a;
-    }
-
-    static LongInt smart(LongInt a, LongInt b) {
-        return b;
-    }
-
-    static LongInt normal(LongInt a, LongInt b) 
+    static LongInt Stupid(LongInt a, LongInt b) 
     {
-        // cout << "\t###########" << endl;
         LongInt res;
-        // return res;
 
         res.v.resize(a.v.size() + b.v.size() + 1);
         res.is_pos = !(a.is_pos ^ b.is_pos);
-        // cout << a.is_pos << " " << b.is_pos << res.is_pos << '\n';
-        // cout << "\t###########" << endl;
         for (int i=0; i<res.v.size()-1; ++i) 
         {
             LL accum = res.v[i], nxt = 0;
             for (int j=0; j<=i && j<a.v.size(); ++j) {
-                // cout << '\t' << i << ' ' << j << '\n';
                 if (i-j >= b.v.size()) 
                     continue;
                 
                 accum += a.v[j] * b.v[i-j];
-                if (accum >= base) {
-                    nxt += accum / base;
-                    accum %= base;
+                if (accum >= LongInt::base) {
+                    nxt += accum / LongInt::base;
+                    accum %= LongInt::base;
                 }
             }
             res.v[i] = accum;
@@ -202,61 +189,23 @@ std::istream& operator>> (std::istream &in, LongInt& x) {
     return in;
 }
 
-class Kek {
-public:
-    static int mem;
-};
 
-int Kek::mem = 3;
+LongInt (*LongInt::mult_method)(LongInt, LongInt) = &Multiplex::Stupid;
 
-int LongInt::mem = 3;
-
-LongInt (*LongInt::mult_method)(LongInt, LongInt) = &Multiplex::normal;
 
 int main() 
 {
-    // g();
+    LongInt::mult_method = &Multiplex::Stupid;
 
-    // cout << Kek().get_mem() << '\n';
-    Kek lol, cheburek;
-    Kek::mem = 4;
-    cout << lol.mem << ' ' << cheburek.mem << '\n';
-    // lol.set_mem(99);
-    // cout << Kek().mem << ' ' << lol.mem << ' ' << cheburek.mem << '\n';
-
-    // LongInt::mem = 55;
-
-
-    // cout << LongInt("0").str() << '\n';
-    // cout << LongInt("10042000").str() << '\n';
-    // cout << LongInt("0010042000").str() << '\n';
-    // cout << LongInt("-123456789").str() << '\n';
-    // cout << LongInt(-13474332).str() << '\n';
-    // LongInt a = string("9876"); cout << a << '\n';
-
-    LongInt 
-        x = LongInt(-5),
-        y = LongInt(101);
-
-    cout << x.mem << '\n';
-    LongInt::mult_method = &Multiplex::normal;
-
-    // // x.setMultAlgo(&Multiplex::smart);
-    // // y.setMultAlgo(&Multiplex::stupid);
-    // // z.setMultAlgo(&Multiplex::normal);
-    // LongInt x,y;
-    // x.setMultAlgo(&Multiplex::normal);
-    // y.setMultAlgo(&Multiplex::normal);
+    LongInt x,y;
+    
     x = string("-21431974198264721");
     y = string("9034795873215");
-    cout << x << " * " << y << " = " << endl;
-    auto z = x*y;
-    cout << z << '\n';;
-
-    // // x.mult(y);
-    // // x *= y;
+    cout << x << " * " << y << " = \n" << x*y << '\n';
     cout << LongInt("-193633512041332459504923348015") << '\n';
-    // // cout << x << '\n';
-    // //cout << (x*y) << '\n';
+
+    x = 123;
+    y = 5;
+    cout << x*y << '\n';
     
 }
