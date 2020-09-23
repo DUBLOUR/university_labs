@@ -1,17 +1,22 @@
 #include<bits/stdc++.h>
+#include <typeinfo>
 using namespace std;
 typedef long long LL;
 #define PB push_back
 
+const int   base_size = 3;
+const LL    base = 1000; // Must be 10^base_size
+    
 
 class LongInt
 {
 private:
+public:
+    
     bool is_pos;
-    int base_size = 3;
-    // LL base = 1000000000;
-    LL base = 1000;
     vector<LL> v;
+    static LongInt (*mult_method)(LongInt, LongInt);
+    static int mem;
 
     void normalize() {
         while (v.size() > 1 && !v.back())
@@ -23,7 +28,8 @@ private:
         if (v.size() == 1 && !v[0])
             is_pos = true;
     }
-public:
+
+
     LongInt(string s) {
         if (s == "")
             s = "0";
@@ -60,6 +66,10 @@ public:
         normalize();
     }
 
+    // LongInt(char x[]) {
+    //     (*this) = LongInt(string(x));
+    // }
+
     LongInt(long long x = 0) {
         is_pos = true;
         if (x < 0) {
@@ -76,6 +86,14 @@ public:
 
         normalize();
     }
+
+    // &LongInt(string s) {
+    //     (*this) = LongInt(s);
+    // }
+    
+    // &LongInt(long long x) {
+    //     (*this) = LongInt(x);
+    // }
 
 
     string str(bool show_plus = false) {
@@ -100,9 +118,80 @@ public:
         return res;
     }
 
+    
+    void setMultAlgo(LongInt (*method)(LongInt, LongInt)) {
+        mult_method = method;
+    }
+
+
+    LongInt mult(LongInt x) {
+        return mult_method(*this, x);
+    }
+
+    
+    LongInt operator*(LongInt x) {
+        return mult(x);
+    }    
+
+
+    void operator*=(LongInt x) {
+        (*this) = mult(x);
+    }    
+
 };
 
-std::ostream& operator<< (std::ostream &out, LongInt& x) {
+
+class Multiplex
+{
+public:
+    Multiplex(){}
+
+    static LongInt stupid(LongInt a, LongInt b) {
+        return a;
+    }
+
+    static LongInt smart(LongInt a, LongInt b) {
+        return b;
+    }
+
+    static LongInt normal(LongInt a, LongInt b) 
+    {
+        // cout << "\t###########" << endl;
+        LongInt res;
+        // return res;
+
+        res.v.resize(a.v.size() + b.v.size() + 1);
+        res.is_pos = !(a.is_pos ^ b.is_pos);
+        // cout << a.is_pos << " " << b.is_pos << res.is_pos << '\n';
+        // cout << "\t###########" << endl;
+        for (int i=0; i<res.v.size()-1; ++i) 
+        {
+            LL accum = res.v[i], nxt = 0;
+            for (int j=0; j<=i && j<a.v.size(); ++j) {
+                // cout << '\t' << i << ' ' << j << '\n';
+                if (i-j >= b.v.size()) 
+                    continue;
+                
+                accum += a.v[j] * b.v[i-j];
+                if (accum >= base) {
+                    nxt += accum / base;
+                    accum %= base;
+                }
+            }
+            res.v[i] = accum;
+            res.v[i+1] = nxt;
+        }
+        res.normalize();
+        return res;
+    }
+
+
+
+};
+
+
+
+std::ostream& operator<< (std::ostream &out, LongInt x) {
     return out << x.str();
 }
 
@@ -113,17 +202,61 @@ std::istream& operator>> (std::istream &in, LongInt& x) {
     return in;
 }
 
+class Kek {
+public:
+    static int mem;
+};
+
+int Kek::mem = 3;
+
+int LongInt::mem = 3;
+
+LongInt (*LongInt::mult_method)(LongInt, LongInt) = &Multiplex::normal;
 
 int main() 
 {
-    cout << LongInt("0").str() << '\n';
-    cout << LongInt("10042000").str() << '\n';
-    cout << LongInt("0010042000").str() << '\n';
-    cout << LongInt("-123456789").str() << '\n';
-    cout << LongInt(-13474332).str() << '\n';
+    // g();
 
-    LongInt x;
-    cin >> x;
-    cout << x << '\n';
+    // cout << Kek().get_mem() << '\n';
+    Kek lol, cheburek;
+    Kek::mem = 4;
+    cout << lol.mem << ' ' << cheburek.mem << '\n';
+    // lol.set_mem(99);
+    // cout << Kek().mem << ' ' << lol.mem << ' ' << cheburek.mem << '\n';
 
+    // LongInt::mem = 55;
+
+
+    // cout << LongInt("0").str() << '\n';
+    // cout << LongInt("10042000").str() << '\n';
+    // cout << LongInt("0010042000").str() << '\n';
+    // cout << LongInt("-123456789").str() << '\n';
+    // cout << LongInt(-13474332).str() << '\n';
+    // LongInt a = string("9876"); cout << a << '\n';
+
+    LongInt 
+        x = LongInt(-5),
+        y = LongInt(101);
+
+    cout << x.mem << '\n';
+    LongInt::mult_method = &Multiplex::normal;
+
+    // // x.setMultAlgo(&Multiplex::smart);
+    // // y.setMultAlgo(&Multiplex::stupid);
+    // // z.setMultAlgo(&Multiplex::normal);
+    // LongInt x,y;
+    // x.setMultAlgo(&Multiplex::normal);
+    // y.setMultAlgo(&Multiplex::normal);
+    x = string("-21431974198264721");
+    y = string("9034795873215");
+    cout << x << " * " << y << " = " << endl;
+    auto z = x*y;
+    cout << z << '\n';;
+
+    // // x.mult(y);
+    // // x *= y;
+    cout << LongInt("-193633512041332459504923348015") << '\n';
+    // // cout << x << '\n';
+    // //cout << (x*y) << '\n';
+    
 }
