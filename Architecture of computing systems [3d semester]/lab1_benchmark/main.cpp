@@ -16,11 +16,9 @@ void draw_row(Measure m, double fastest_op, int bar_max_width = 44) {
     if (bar_len == 1)
         bar += ":";
     
-    // cout << op_per_sec << ' ' << ratio << ' ' << percent << ' ' << bar_len << '\n'; return;
-    
     printf(
         " %-3s %-15s %.3e %-*s%d%%\n", 
-        ("=" + m.op1 + m.op2).c_str(), 
+        (m.op1 + m.op2).c_str(), 
         ((m.reg ? "reg " : "") + m.type).c_str(), 
         m.op_per_sec, 
         bar_max_width,
