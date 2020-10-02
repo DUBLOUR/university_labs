@@ -53,10 +53,9 @@ private:
     
         char f[] = 
         "int Test_%2$s_%4$s_%6$s%7$s(int count_of_iterations) {\n"
-        "    %1$s hash = 1, now = 1, a = 173, b = 9973;\n"
+        "    %1$s hash = 1, a = 173, b = 9973;\n"
         "    for (int i=0; i<count_of_iterations; ++i) {\n"
         "        hash = ((hash+1)%8$s %3$s a) %5$s b;\n"
-        "        now += 1;\n"
         "    }\n"
         "    return (int) hash;\n"
         "}\n\n";

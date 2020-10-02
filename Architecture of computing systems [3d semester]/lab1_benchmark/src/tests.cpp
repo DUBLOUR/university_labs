@@ -327,153 +327,137 @@ int Test___int128_mult_mod_empty(int count_of_iterations) {
 }
 
 
-int Test_float_plus_mult(int count_of_iterations) {
-    float hash = 1, now = 1, a = 173, b = 9973;
+int Test_float_plus_div(int count_of_iterations) {
+    float hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
-        hash = ((hash+1) + a) * b;
-        now += 1;
+        hash = ((hash+1) + a) / b;
     }
     return (int) hash;
 }
 
-int Test_float_plus_mult_empty(int count_of_iterations) {
-    float hash = 1, now = 1, a = 173, b = 9973;
+int Test_float_plus_div_empty(int count_of_iterations) {
+    float hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
-        hash = ((hash+1)); // + a) * b;
-        now += 1;
+        hash = ((hash+1)); // + a) / b;
     }
     return (int) hash;
 }
 
 
-int Test_registerfloat_plus_mult(int count_of_iterations) {
-    register float hash = 1, now = 1, a = 173, b = 9973;
+int Test_registerfloat_plus_div(int count_of_iterations) {
+    register float hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
-        hash = ((hash+1) + a) * b;
-        now += 1;
+        hash = ((hash+1) + a) / b;
     }
     return (int) hash;
 }
 
-int Test_registerfloat_plus_mult_empty(int count_of_iterations) {
-    register float hash = 1, now = 1, a = 173, b = 9973;
+int Test_registerfloat_plus_div_empty(int count_of_iterations) {
+    register float hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
-        hash = ((hash+1)); // + a) * b;
-        now += 1;
+        hash = ((hash+1)); // + a) / b;
     }
     return (int) hash;
 }
 
 
 int Test_float_mult_div(int count_of_iterations) {
-    float hash = 1, now = 1, a = 173, b = 9973;
+    float hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
         hash = ((hash+1) * a) / b;
-        now += 1;
     }
     return (int) hash;
 }
 
 int Test_float_mult_div_empty(int count_of_iterations) {
-    float hash = 1, now = 1, a = 173, b = 9973;
+    float hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
         hash = ((hash+1)); // * a) / b;
-        now += 1;
     }
     return (int) hash;
 }
 
 
 int Test_registerfloat_mult_div(int count_of_iterations) {
-    register float hash = 1, now = 1, a = 173, b = 9973;
+    register float hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
         hash = ((hash+1) * a) / b;
-        now += 1;
     }
     return (int) hash;
 }
 
 int Test_registerfloat_mult_div_empty(int count_of_iterations) {
-    register float hash = 1, now = 1, a = 173, b = 9973;
+    register float hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
         hash = ((hash+1)); // * a) / b;
-        now += 1;
     }
     return (int) hash;
 }
 
 
-int Test_double_plus_mult(int count_of_iterations) {
-    double hash = 1, now = 1, a = 173, b = 9973;
+int Test_double_plus_div(int count_of_iterations) {
+    double hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
-        hash = ((hash+1) + a) * b;
-        now += 1;
+        hash = ((hash+1) + a) / b;
     }
     return (int) hash;
 }
 
-int Test_double_plus_mult_empty(int count_of_iterations) {
-    double hash = 1, now = 1, a = 173, b = 9973;
+int Test_double_plus_div_empty(int count_of_iterations) {
+    double hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
-        hash = ((hash+1)); // + a) * b;
-        now += 1;
+        hash = ((hash+1)); // + a) / b;
     }
     return (int) hash;
 }
 
 
-int Test_registerdouble_plus_mult(int count_of_iterations) {
-    register double hash = 1, now = 1, a = 173, b = 9973;
+int Test_registerdouble_plus_div(int count_of_iterations) {
+    register double hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
-        hash = ((hash+1) + a) * b;
-        now += 1;
+        hash = ((hash+1) + a) / b;
     }
     return (int) hash;
 }
 
-int Test_registerdouble_plus_mult_empty(int count_of_iterations) {
-    register double hash = 1, now = 1, a = 173, b = 9973;
+int Test_registerdouble_plus_div_empty(int count_of_iterations) {
+    register double hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
-        hash = ((hash+1)); // + a) * b;
-        now += 1;
+        hash = ((hash+1)); // + a) / b;
     }
     return (int) hash;
 }
 
 
 int Test_double_mult_div(int count_of_iterations) {
-    double hash = 1, now = 1, a = 173, b = 9973;
+    double hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
         hash = ((hash+1) * a) / b;
-        now += 1;
     }
     return (int) hash;
 }
 
 int Test_double_mult_div_empty(int count_of_iterations) {
-    double hash = 1, now = 1, a = 173, b = 9973;
+    double hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
         hash = ((hash+1)); // * a) / b;
-        now += 1;
     }
     return (int) hash;
 }
 
 
 int Test_registerdouble_mult_div(int count_of_iterations) {
-    register double hash = 1, now = 1, a = 173, b = 9973;
+    register double hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
         hash = ((hash+1) * a) / b;
-        now += 1;
     }
     return (int) hash;
 }
 
 int Test_registerdouble_mult_div_empty(int count_of_iterations) {
-    register double hash = 1, now = 1, a = 173, b = 9973;
+    register double hash = 1, a = 173, b = 9973;
     for (int i=0; i<count_of_iterations; ++i) {
         hash = ((hash+1)); // * a) / b;
-        now += 1;
     }
     return (int) hash;
 }
@@ -583,16 +567,16 @@ vector<Measure> list_of_tests = {
    Measure(
        "float",
        "+", "plus",
-       "*", "mult",
-       Test_float_plus_mult,
-       Test_float_plus_mult_empty
+       "/", "div",
+       Test_float_plus_div,
+       Test_float_plus_div_empty
    ),
    Measure(
        "register float",
        "+", "plus",
-       "*", "mult",
-       Test_registerfloat_plus_mult,
-       Test_registerfloat_plus_mult_empty
+       "/", "div",
+       Test_registerfloat_plus_div,
+       Test_registerfloat_plus_div_empty
    ),
    Measure(
        "float",
@@ -611,16 +595,16 @@ vector<Measure> list_of_tests = {
    Measure(
        "double",
        "+", "plus",
-       "*", "mult",
-       Test_double_plus_mult,
-       Test_double_plus_mult_empty
+       "/", "div",
+       Test_double_plus_div,
+       Test_double_plus_div_empty
    ),
    Measure(
        "register double",
        "+", "plus",
-       "*", "mult",
-       Test_registerdouble_plus_mult,
-       Test_registerdouble_plus_mult_empty
+       "/", "div",
+       Test_registerdouble_plus_div,
+       Test_registerdouble_plus_div_empty
    ),
    Measure(
        "double",

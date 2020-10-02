@@ -37,12 +37,12 @@ vector<MeasureDraft> drafts() {
         MeasureDraft(2, "unsigned long long", "*", "mult", "%", "mod"),
         MeasureDraft(2, "__int128", "*", "mult", "%", "mod"),
 
-        MeasureDraft(3, "float", "+", "plus", "*", "mult"),
-        MeasureDraft(3, "register float", "+", "plus", "*", "mult"),
+        MeasureDraft(3, "float", "+", "plus", "/", "div"),
+        MeasureDraft(3, "register float", "+", "plus", "/", "div"),
         MeasureDraft(3, "float", "*", "mult", "/", "div"),
         MeasureDraft(3, "register float", "*", "mult", "/", "div"),
-        MeasureDraft(3, "double", "+", "plus", "*", "mult"),
-        MeasureDraft(3, "register double", "+", "plus", "*", "mult"),
+        MeasureDraft(3, "double", "+", "plus", "/", "div"),
+        MeasureDraft(3, "register double", "+", "plus", "/", "div"),
         MeasureDraft(3, "double", "*", "mult", "/", "div"),
         MeasureDraft(3, "register double", "*", "mult", "/", "div"),
     };
