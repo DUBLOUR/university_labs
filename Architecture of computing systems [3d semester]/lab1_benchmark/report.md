@@ -70,6 +70,27 @@ int Test_longlong_xor_empty(int count_of_iterations) {
 }
 ```
 
+Обрезание по последним битам в (`mask = (1<<12)-1; hash &= mask;`) используется для того, чтобы избежать переполнения, если например, используется операция `*`, или `+`. Для вещественных чисел применяется следующий шаблон. Как легко убедиться, он позволяет избежать денормализации `hash`, ведь благодаря `(hash+1)` и делению на большее его значение постоянно будет находится около 1:
+```c++
+int Test_registerfloat_mult_div(int count_of_iterations) {
+    register float hash = 1, now = 1, a = 173, b = 9973;
+    for (int i=0; i<count_of_iterations; ++i) {
+        hash = ((hash+1) * a) / b;
+        now += 1;
+    }
+    return (int) hash;
+}
+
+int Test_registerfloat_mult_div_empty(int count_of_iterations) {
+    register float hash = 1, now = 1, a = 173, b = 9973;
+    for (int i=0; i<count_of_iterations; ++i) {
+        hash = ((hash+1)); // * a) / b;
+        now += 1;
+    }
+    return (int) hash;
+}
+```
+
 Функции генерируются файлом `codegen.cpp` по нескольким шаблонам и записываются в `tests.cpp`. В качестве источника тестовых случаев используется перечисление из `drafts.h`, которое задаётся следующим образом:
 
 ```c++
