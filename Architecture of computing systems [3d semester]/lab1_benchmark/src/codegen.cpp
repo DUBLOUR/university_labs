@@ -12,12 +12,23 @@ private:
     void template_1(const char* type, const char* type_name, const char* op, const char* op_name) {
     
         char f[] = 
-        "int Test_%2$s_%4$s%5$s(int count_of_iterations) {\n"
+        "int Test1_%2$s_%4$s%5$s(int count_of_iterations) {\n"
         "    %1$s mask = (1<<12)-1;\n"
         "    %1$s hash = 0, now = 1;\n"
+        "    count_of_iterations /= 6;\n"
         "    for (int i=0; i<count_of_iterations; ++i) {\n"
-        "        hash = hash%6$s %3$s now;\n"
-        "        now += 1;\n"
+        "        hash = hash%6$s %3$s (now);\n"
+        "        hash &= mask;\n"
+        "        hash = hash%6$s %3$s (now);\n"
+        "        hash &= mask;\n"
+        "        hash = hash%6$s %3$s (now);\n"
+        "        hash &= mask;\n"
+        "        hash = hash%6$s %3$s (now);\n"
+        "        hash &= mask;\n"
+        "        hash = hash%6$s %3$s (now);\n"
+        "        hash &= mask;\n"
+        "        hash = hash%6$s %3$s (now);\n"
+        "        now += 6;\n"
         "        hash &= mask;\n"
         "    }\n"
         "    return (int) hash + mask;\n"
@@ -32,12 +43,23 @@ private:
     void template_2(const char* type, const char* type_name, const char* op1, const char* op1_name, const char* op2, const char* op2_name) {
     
         char f[] = 
-        "int Test_%2$s_%4$s_%6$s%7$s(int count_of_iterations) {\n"
+        "int Test2_%2$s_%4$s_%6$s%7$s(int count_of_iterations) {\n"
         "    %1$s mask = (1<<20)-1;\n"
+        "    count_of_iterations /= 6;\n"
         "    %1$s hash = 1, now = 1, a = 173, b = 9973;\n"
         "    for (int i=0; i<count_of_iterations; ++i) {\n"
         "        hash = ((hash+1)%8$s %3$s a) %5$s b;\n"
-        "        now += 1;\n"
+        "        hash &= mask;\n"
+        "        hash = ((hash+2)%8$s %3$s a) %5$s b;\n"
+        "        hash &= mask;\n"
+        "        hash = ((hash+3)%8$s %3$s a) %5$s b;\n"
+        "        hash &= mask;\n"
+        "        hash = ((hash+4)%8$s %3$s a) %5$s b;\n"
+        "        hash &= mask;\n"
+        "        hash = ((hash+5)%8$s %3$s a) %5$s b;\n"
+        "        hash &= mask;\n"
+        "        hash = ((hash+6)%8$s %3$s a) %5$s b;\n"
+        "        now += 6;\n"
         "        hash &= mask;\n"
         "    }\n"
         "    return (int) hash + mask;\n"
@@ -52,9 +74,15 @@ private:
     void template_3(const char* type, const char* type_name, const char* op1, const char* op1_name, const char* op2, const char* op2_name) {
     
         char f[] = 
-        "int Test_%2$s_%4$s_%6$s%7$s(int count_of_iterations) {\n"
+        "int Test3_%2$s_%4$s_%6$s%7$s(int count_of_iterations) {\n"
         "    %1$s hash = 1, a = 173, b = 9973;\n"
+        "    count_of_iterations /= 6;\n"
         "    for (int i=0; i<count_of_iterations; ++i) {\n"
+        "        hash = ((hash+1)%8$s %3$s a) %5$s b;\n"
+        "        hash = ((hash+1)%8$s %3$s a) %5$s b;\n"
+        "        hash = ((hash+1)%8$s %3$s a) %5$s b;\n"
+        "        hash = ((hash+1)%8$s %3$s a) %5$s b;\n"
+        "        hash = ((hash+1)%8$s %3$s a) %5$s b;\n"
         "        hash = ((hash+1)%8$s %3$s a) %5$s b;\n"
         "    }\n"
         "    return (int) hash;\n"
@@ -65,6 +93,57 @@ private:
         printf(f, type, type_name, op1, op1_name, op2, op2_name, "_empty", "); //");
         printf("\n");
     }
+
+
+    void template_4(const char* type, const char* type_name, const char* op1, const char* op1_name) {
+    
+        char f[] = 
+        "int Test4_%2$s_%4$s%7$s(int count_of_iterations) {\n"
+        "    %1$s hash = 1, a = 1000000, b = 1000001, c;\n"
+        "    c = a/b; count_of_iterations /= 6;\n"
+        "    for (int i=0; i<count_of_iterations; ++i) {\n"
+        "        hash = (hash+1)%8$s %3$s c;\n"
+        "        hash = (hash+1)%8$s %3$s c;\n"
+        "        hash = (hash+1)%8$s %3$s c;\n"
+        "        hash = (hash+1)%8$s %3$s c;\n"
+        "        hash = (hash+1)%8$s %3$s c;\n"
+        "        hash = (hash+1)%8$s %3$s c;\n"
+        "    }\n"
+        "    return (int) hash;\n"
+        "}\n\n";
+
+        //         1        2       3      4       5  6   7   8  
+        printf(f, type, type_name, op1, op1_name, "", "", "", "");
+        printf(f, type, type_name, op1, op1_name, "", "", "_empty", "; //");
+        printf("\n");
+    }
+
+
+    void template_5(const char* type, const char* type_name, const char* op, const char* op_name) {
+    
+        char f[] = 
+        "int Test5_%2$s_%4$s%5$s(int count_of_iterations) {\n"
+        "    %1$s mask = (1<<12)-1;\n"
+        "    %1$s hash = 0, now = 1;\n"
+        "    count_of_iterations /= 6;\n"
+        "    for (int i=0; i<count_of_iterations; ++i) {\n"
+        "        hash = hash%6$s %3$s (now);\n"
+        "        hash = hash%6$s %3$s (now);\n"
+        "        hash = hash%6$s %3$s (now);\n"
+        "        hash = hash%6$s %3$s (now);\n"
+        "        hash = hash%6$s %3$s (now);\n"
+        "        hash = hash%6$s %3$s (now);\n"
+        "        now += 6;\n"
+        "    }\n"
+        "    return (int) hash + mask;\n"
+        "}\n\n";
+
+        //         1        2       3    4       5   6    
+        printf(f, type, type_name, op, op_name, "", "");
+        printf(f, type, type_name, op, op_name, "_empty", "; //");
+        printf("\n");
+    }
+
 
     string del_space(string s) {
         string res = s;
@@ -80,7 +159,7 @@ public:
         template_1(type.c_str(), type_name.c_str(), op.c_str(), op_name.c_str());
 
         pair<string,string> f_names;
-        f_names.first = "Test_" + type_name + "_" + op_name;
+        f_names.first = "Test1_" + type_name + "_" + op_name;
         f_names.second = f_names.first + "_empty";
         return f_names;
     }
@@ -91,7 +170,7 @@ public:
         template_2(type.c_str(), type_name.c_str(), op1.c_str(), op_name1.c_str(), op2.c_str(), op_name2.c_str());
 
         pair<string,string> f_names;
-        f_names.first = "Test_" + type_name + "_" + op_name1 + "_" + op_name2;
+        f_names.first = "Test2_" + type_name + "_" + op_name1 + "_" + op_name2;
         f_names.second = f_names.first + "_empty";
         return f_names;
     }
@@ -102,10 +181,33 @@ public:
         template_3(type.c_str(), type_name.c_str(), op1.c_str(), op_name1.c_str(), op2.c_str(), op_name2.c_str());
 
         pair<string,string> f_names;
-        f_names.first = "Test_" + type_name + "_" + op_name1 + "_" + op_name2;
+        f_names.first = "Test3_" + type_name + "_" + op_name1 + "_" + op_name2;
         f_names.second = f_names.first + "_empty";
         return f_names;
     }
+
+
+    pair<string,string> print_func_4(string type, string op, string op_name) {
+        string type_name = del_space(type);
+        template_4(type.c_str(), type_name.c_str(), op.c_str(), op_name.c_str());
+
+        pair<string,string> f_names;
+        f_names.first = "Test4_" + type_name + "_" + op_name;
+        f_names.second = f_names.first + "_empty";
+        return f_names;
+    }
+
+    pair<string,string> print_func_5(string type, string op, string op_name) {
+        string type_name = del_space(type);
+        template_5(type.c_str(), type_name.c_str(), op.c_str(), op_name.c_str());
+
+        pair<string,string> f_names;
+        f_names.first = "Test5_" + type_name + "_" + op_name;
+        f_names.second = f_names.first + "_empty";
+        return f_names;
+    }
+
+
 
 };
 
@@ -122,6 +224,12 @@ void MeasureDraft::PrintTests() {
             break;
         case 3: 
             p = Gen().print_func_3(type, op1, op_name1, op2, op_name2); 
+            break;
+        case 4: 
+            p = Gen().print_func_4(type, op1, op_name1); 
+            break;
+        case 5: 
+            p = Gen().print_func_5(type, op1, op_name1); 
             break;
     }
     

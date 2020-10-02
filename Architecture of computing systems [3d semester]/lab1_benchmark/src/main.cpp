@@ -24,7 +24,7 @@ void draw_row(Measure m, vector<pair<string,string>>& abbreviations, double fast
         bar += ":";
 
     string type = m.type;
-    if (type.size() > 12) {
+    if (type.size() > 15) {
         string abbr = get_acronym(type);
         abbreviations.push_back(make_pair(abbr, type));
         type = abbr;
@@ -33,12 +33,12 @@ void draw_row(Measure m, vector<pair<string,string>>& abbreviations, double fast
     static bool need_header = true;
     if (need_header) {
         need_header = false;
-        cout << " Op  Type            OpPerSec              [More is faster]             Percent\n";
-             // " *-  short           6.597e+08 ########################################### 100%"
+        cout << "Op  Type             OpPerSec              [More is faster]             Percent\n";
+             // "*-  short            6.597e+08 ########################################### 100%"
     }
     
     printf(
-        " %-3s %-15s %.3e %-*s%d%%\n", 
+        " %-2s %-16s %.3e %-*s%d%%\n", 
         (m.op1 + m.op2).c_str(), 
         type.c_str(), 
         m.op_per_sec, 
