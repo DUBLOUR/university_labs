@@ -1,3 +1,6 @@
+/// Need to generate functions and vector with measures to `tests.cpp`
+/// Use `drafts.h` for set up functions.
+
 #include<bits/stdc++.h>
 #include "measures.h"
 #include "drafts.h"
@@ -11,7 +14,7 @@ private:
         char f[] = 
         "int Test_%2$s_%4$s%5$s(int count_of_iterations) {\n"
         "    %1$s mask = (1<<12)-1;\n"
-        "    %1$s hash = 0, now = 0;\n"
+        "    %1$s hash = 0, now = 1;\n"
         "    for (int i=0; i<count_of_iterations; ++i) {\n"
         "        hash = hash%6$s %3$s now;\n"
         "        now += 1;\n"
@@ -33,7 +36,7 @@ private:
         "    %1$s mask = (1<<20)-1;\n"
         "    %1$s hash = 1, now = 1, a = 173, b = 9973;\n"
         "    for (int i=0; i<count_of_iterations; ++i) {\n"
-        "        hash = (hash+1)%8$s %3$s a %5$s b;\n"
+        "        hash = ((hash+1)%8$s %3$s a) %5$s b;\n"
         "        now += 1;\n"
         "        hash &= mask;\n"
         "    }\n"
@@ -42,7 +45,7 @@ private:
 
         //         1        2       3      4       5      6       7   8 
         printf(f, type, type_name, op1, op1_name, op2, op2_name, "", "");
-        printf(f, type, type_name, op1, op1_name, op2, op2_name, "_empty", "; //");
+        printf(f, type, type_name, op1, op1_name, op2, op2_name, "_empty", "); //");
         printf("\n");
     }
 
@@ -52,7 +55,7 @@ private:
         "int Test_%2$s_%4$s_%6$s%7$s(int count_of_iterations) {\n"
         "    %1$s hash = 1, now = 1, a = 173, b = 9973;\n"
         "    for (int i=0; i<count_of_iterations; ++i) {\n"
-        "        hash = (hash+1)%8$s %3$s a %5$s b;\n"
+        "        hash = ((hash+1)%8$s %3$s a) %5$s b;\n"
         "        now += 1;\n"
         "    }\n"
         "    return (int) hash;\n"
@@ -60,7 +63,7 @@ private:
 
         //         1        2       3      4       5      6       7   8  
         printf(f, type, type_name, op1, op1_name, op2, op2_name, "", "");
-        printf(f, type, type_name, op1, op1_name, op2, op2_name, "_empty", "; //");
+        printf(f, type, type_name, op1, op1_name, op2, op2_name, "_empty", "); //");
         printf("\n");
     }
 
@@ -131,7 +134,7 @@ void MeasureDraft::PrintTests() {
 void MeasureDraft::PrintInstance(bool is_last) {
     char f[] = 
     "   Measure(\n"
-    "       \"%1$s\","
+    "       \"%1$s\",\n"
     "       \"%2$s\", \"%3$s\",\n"
     "       \"%4$s\", \"%5$s\",\n"
     "       %6$s,\n"
