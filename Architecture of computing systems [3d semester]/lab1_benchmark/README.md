@@ -5,7 +5,8 @@ https://sites.google.com/site/byvkyiv1/arhiteom_stac/arhiteom_lab_01
 ![изображение](https://user-images.githubusercontent.com/20306702/94889018-8693eb80-0483-11eb-8cb5-1d9c0978cbbb.png)
 
 ### Запуск проекта с dockerhub:
-`docker pull karasicklab0/type_benchmarking`
+- `docker pull karasicklab0/type_benchmarking:1.0.0`
+- `docker run --rm -it karasicklab0/type_benchmarking:1.0.0`
 
 ### Сборка проекта
 Ручная компиляция:
