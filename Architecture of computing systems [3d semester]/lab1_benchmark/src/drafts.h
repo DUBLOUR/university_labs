@@ -46,44 +46,17 @@ vector<MeasureDraft> drafts() {
         // MeasureDraft(3, "double", "*", "mult", "/", "div"),
         // MeasureDraft(3, "register double", "*", "mult", "/", "div"),
 
-        // MeasureDraft(1, "char", "+", "plus"),
-        // MeasureDraft(1, "char", "*", "mult"),
-        // MeasureDraft(1, "char", "%", "mod"),
-        // MeasureDraft(1, "short", "+", "plus"),
-        // MeasureDraft(1, "short", "*", "mult"),
-        // MeasureDraft(1, "short", "%", "mod"),
-        // MeasureDraft(1, "int", "+", "plus"),
-        // MeasureDraft(1, "int", "*", "mult"),
-        // MeasureDraft(1, "int", "%", "mod"),
-        // MeasureDraft(1, "long long", "+", "plus"),
-        // MeasureDraft(1, "long long", "*", "mult"),
-        // MeasureDraft(1, "long long", "%", "mod"),
-
-        // MeasureDraft(5, "float", "+", "plus"),
-        // MeasureDraft(4, "float", "*", "mult"),
-        // MeasureDraft(4, "float", "/", "div"),
-        // MeasureDraft(4, "register float", "*", "mult"),
-        // MeasureDraft(4, "register float", "/", "div"),
-        
-        // MeasureDraft(5, "double", "+", "plus"),
-        // MeasureDraft(4, "double", "*", "mult"),
-        // MeasureDraft(4, "double", "/", "div"),
-        // MeasureDraft(4, "register double", "*", "mult"),
-        // MeasureDraft(4, "register double", "/", "div"),
-
         MeasureDraft(1, "char", "+", "plus"),
-        MeasureDraft(1, "short", "+", "plus"),
-        MeasureDraft(1, "int", "+", "plus"),
-        MeasureDraft(1, "long long", "+", "plus"),
-        
         MeasureDraft(1, "char", "*", "mult"),
-        MeasureDraft(1, "short", "*", "mult"),
-        MeasureDraft(1, "int", "*", "mult"),
-        MeasureDraft(1, "long long", "*", "mult"),
-        
         MeasureDraft(1, "char", "%", "mod"),
+        MeasureDraft(1, "short", "+", "plus"),
+        MeasureDraft(1, "short", "*", "mult"),
         MeasureDraft(1, "short", "%", "mod"),
+        MeasureDraft(1, "int", "+", "plus"),
+        MeasureDraft(1, "int", "*", "mult"),
         MeasureDraft(1, "int", "%", "mod"),
+        MeasureDraft(1, "long long", "+", "plus"),
+        MeasureDraft(1, "long long", "*", "mult"),
         MeasureDraft(1, "long long", "%", "mod"),
 
         MeasureDraft(5, "float", "+", "plus"),
@@ -97,6 +70,33 @@ vector<MeasureDraft> drafts() {
         MeasureDraft(4, "double", "/", "div"),
         MeasureDraft(4, "register double", "*", "mult"),
         MeasureDraft(4, "register double", "/", "div"),
+
+        // MeasureDraft(1, "char", "+", "plus"),
+        // MeasureDraft(1, "short", "+", "plus"),
+        // MeasureDraft(1, "int", "+", "plus"),
+        // MeasureDraft(1, "long long", "+", "plus"),
+        
+        // MeasureDraft(1, "char", "*", "mult"),
+        // MeasureDraft(1, "short", "*", "mult"),
+        // MeasureDraft(1, "int", "*", "mult"),
+        // MeasureDraft(1, "long long", "*", "mult"),
+        
+        // MeasureDraft(1, "char", "%", "mod"),
+        // MeasureDraft(1, "short", "%", "mod"),
+        // MeasureDraft(1, "int", "%", "mod"),
+        // MeasureDraft(1, "long long", "%", "mod"),
+
+        // MeasureDraft(5, "float", "+", "plus"),
+        // MeasureDraft(4, "float", "*", "mult"),
+        // MeasureDraft(4, "float", "/", "div"),
+        // MeasureDraft(4, "register float", "*", "mult"),
+        // MeasureDraft(4, "register float", "/", "div"),
+        
+        // MeasureDraft(5, "double", "+", "plus"),
+        // MeasureDraft(4, "double", "*", "mult"),
+        // MeasureDraft(4, "double", "/", "div"),
+        // MeasureDraft(4, "register double", "*", "mult"),
+        // MeasureDraft(4, "register double", "/", "div"),
         
     };
 }

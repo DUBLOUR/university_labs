@@ -50,141 +50,6 @@ int Test1_char_plus_empty(int count_of_iterations) {
 }
 
 
-int Test1_short_plus(int count_of_iterations) {
-    short mask = (1<<12)-1;
-    short hash = 0, now = 1;
-    count_of_iterations /= 6;
-    for (int i=0; i<count_of_iterations; ++i) {
-        hash = hash + (now);
-        hash &= mask;
-        hash = hash + (now);
-        hash &= mask;
-        hash = hash + (now);
-        hash &= mask;
-        hash = hash + (now);
-        hash &= mask;
-        hash = hash + (now);
-        hash &= mask;
-        hash = hash + (now);
-        now += 6;
-        hash &= mask;
-    }
-    return (int) hash + mask;
-}
-
-int Test1_short_plus_empty(int count_of_iterations) {
-    short mask = (1<<12)-1;
-    short hash = 0, now = 1;
-    count_of_iterations /= 6;
-    for (int i=0; i<count_of_iterations; ++i) {
-        hash = hash; // + (now);
-        hash &= mask;
-        hash = hash; // + (now);
-        hash &= mask;
-        hash = hash; // + (now);
-        hash &= mask;
-        hash = hash; // + (now);
-        hash &= mask;
-        hash = hash; // + (now);
-        hash &= mask;
-        hash = hash; // + (now);
-        now += 6;
-        hash &= mask;
-    }
-    return (int) hash + mask;
-}
-
-
-int Test1_int_plus(int count_of_iterations) {
-    int mask = (1<<12)-1;
-    int hash = 0, now = 1;
-    count_of_iterations /= 6;
-    for (int i=0; i<count_of_iterations; ++i) {
-        hash = hash + (now);
-        hash &= mask;
-        hash = hash + (now);
-        hash &= mask;
-        hash = hash + (now);
-        hash &= mask;
-        hash = hash + (now);
-        hash &= mask;
-        hash = hash + (now);
-        hash &= mask;
-        hash = hash + (now);
-        now += 6;
-        hash &= mask;
-    }
-    return (int) hash + mask;
-}
-
-int Test1_int_plus_empty(int count_of_iterations) {
-    int mask = (1<<12)-1;
-    int hash = 0, now = 1;
-    count_of_iterations /= 6;
-    for (int i=0; i<count_of_iterations; ++i) {
-        hash = hash; // + (now);
-        hash &= mask;
-        hash = hash; // + (now);
-        hash &= mask;
-        hash = hash; // + (now);
-        hash &= mask;
-        hash = hash; // + (now);
-        hash &= mask;
-        hash = hash; // + (now);
-        hash &= mask;
-        hash = hash; // + (now);
-        now += 6;
-        hash &= mask;
-    }
-    return (int) hash + mask;
-}
-
-
-int Test1_longlong_plus(int count_of_iterations) {
-    long long mask = (1<<12)-1;
-    long long hash = 0, now = 1;
-    count_of_iterations /= 6;
-    for (int i=0; i<count_of_iterations; ++i) {
-        hash = hash + (now);
-        hash &= mask;
-        hash = hash + (now);
-        hash &= mask;
-        hash = hash + (now);
-        hash &= mask;
-        hash = hash + (now);
-        hash &= mask;
-        hash = hash + (now);
-        hash &= mask;
-        hash = hash + (now);
-        now += 6;
-        hash &= mask;
-    }
-    return (int) hash + mask;
-}
-
-int Test1_longlong_plus_empty(int count_of_iterations) {
-    long long mask = (1<<12)-1;
-    long long hash = 0, now = 1;
-    count_of_iterations /= 6;
-    for (int i=0; i<count_of_iterations; ++i) {
-        hash = hash; // + (now);
-        hash &= mask;
-        hash = hash; // + (now);
-        hash &= mask;
-        hash = hash; // + (now);
-        hash &= mask;
-        hash = hash; // + (now);
-        hash &= mask;
-        hash = hash; // + (now);
-        hash &= mask;
-        hash = hash; // + (now);
-        now += 6;
-        hash &= mask;
-    }
-    return (int) hash + mask;
-}
-
-
 int Test1_char_mult(int count_of_iterations) {
     char mask = (1<<12)-1;
     char hash = 0, now = 1;
@@ -210,141 +75,6 @@ int Test1_char_mult(int count_of_iterations) {
 int Test1_char_mult_empty(int count_of_iterations) {
     char mask = (1<<12)-1;
     char hash = 0, now = 1;
-    count_of_iterations /= 6;
-    for (int i=0; i<count_of_iterations; ++i) {
-        hash = hash; // * (now);
-        hash &= mask;
-        hash = hash; // * (now);
-        hash &= mask;
-        hash = hash; // * (now);
-        hash &= mask;
-        hash = hash; // * (now);
-        hash &= mask;
-        hash = hash; // * (now);
-        hash &= mask;
-        hash = hash; // * (now);
-        now += 6;
-        hash &= mask;
-    }
-    return (int) hash + mask;
-}
-
-
-int Test1_short_mult(int count_of_iterations) {
-    short mask = (1<<12)-1;
-    short hash = 0, now = 1;
-    count_of_iterations /= 6;
-    for (int i=0; i<count_of_iterations; ++i) {
-        hash = hash * (now);
-        hash &= mask;
-        hash = hash * (now);
-        hash &= mask;
-        hash = hash * (now);
-        hash &= mask;
-        hash = hash * (now);
-        hash &= mask;
-        hash = hash * (now);
-        hash &= mask;
-        hash = hash * (now);
-        now += 6;
-        hash &= mask;
-    }
-    return (int) hash + mask;
-}
-
-int Test1_short_mult_empty(int count_of_iterations) {
-    short mask = (1<<12)-1;
-    short hash = 0, now = 1;
-    count_of_iterations /= 6;
-    for (int i=0; i<count_of_iterations; ++i) {
-        hash = hash; // * (now);
-        hash &= mask;
-        hash = hash; // * (now);
-        hash &= mask;
-        hash = hash; // * (now);
-        hash &= mask;
-        hash = hash; // * (now);
-        hash &= mask;
-        hash = hash; // * (now);
-        hash &= mask;
-        hash = hash; // * (now);
-        now += 6;
-        hash &= mask;
-    }
-    return (int) hash + mask;
-}
-
-
-int Test1_int_mult(int count_of_iterations) {
-    int mask = (1<<12)-1;
-    int hash = 0, now = 1;
-    count_of_iterations /= 6;
-    for (int i=0; i<count_of_iterations; ++i) {
-        hash = hash * (now);
-        hash &= mask;
-        hash = hash * (now);
-        hash &= mask;
-        hash = hash * (now);
-        hash &= mask;
-        hash = hash * (now);
-        hash &= mask;
-        hash = hash * (now);
-        hash &= mask;
-        hash = hash * (now);
-        now += 6;
-        hash &= mask;
-    }
-    return (int) hash + mask;
-}
-
-int Test1_int_mult_empty(int count_of_iterations) {
-    int mask = (1<<12)-1;
-    int hash = 0, now = 1;
-    count_of_iterations /= 6;
-    for (int i=0; i<count_of_iterations; ++i) {
-        hash = hash; // * (now);
-        hash &= mask;
-        hash = hash; // * (now);
-        hash &= mask;
-        hash = hash; // * (now);
-        hash &= mask;
-        hash = hash; // * (now);
-        hash &= mask;
-        hash = hash; // * (now);
-        hash &= mask;
-        hash = hash; // * (now);
-        now += 6;
-        hash &= mask;
-    }
-    return (int) hash + mask;
-}
-
-
-int Test1_longlong_mult(int count_of_iterations) {
-    long long mask = (1<<12)-1;
-    long long hash = 0, now = 1;
-    count_of_iterations /= 6;
-    for (int i=0; i<count_of_iterations; ++i) {
-        hash = hash * (now);
-        hash &= mask;
-        hash = hash * (now);
-        hash &= mask;
-        hash = hash * (now);
-        hash &= mask;
-        hash = hash * (now);
-        hash &= mask;
-        hash = hash * (now);
-        hash &= mask;
-        hash = hash * (now);
-        now += 6;
-        hash &= mask;
-    }
-    return (int) hash + mask;
-}
-
-int Test1_longlong_mult_empty(int count_of_iterations) {
-    long long mask = (1<<12)-1;
-    long long hash = 0, now = 1;
     count_of_iterations /= 6;
     for (int i=0; i<count_of_iterations; ++i) {
         hash = hash; // * (now);
@@ -410,6 +140,96 @@ int Test1_char_mod_empty(int count_of_iterations) {
 }
 
 
+int Test1_short_plus(int count_of_iterations) {
+    short mask = (1<<12)-1;
+    short hash = 0, now = 1;
+    count_of_iterations /= 6;
+    for (int i=0; i<count_of_iterations; ++i) {
+        hash = hash + (now);
+        hash &= mask;
+        hash = hash + (now);
+        hash &= mask;
+        hash = hash + (now);
+        hash &= mask;
+        hash = hash + (now);
+        hash &= mask;
+        hash = hash + (now);
+        hash &= mask;
+        hash = hash + (now);
+        now += 6;
+        hash &= mask;
+    }
+    return (int) hash + mask;
+}
+
+int Test1_short_plus_empty(int count_of_iterations) {
+    short mask = (1<<12)-1;
+    short hash = 0, now = 1;
+    count_of_iterations /= 6;
+    for (int i=0; i<count_of_iterations; ++i) {
+        hash = hash; // + (now);
+        hash &= mask;
+        hash = hash; // + (now);
+        hash &= mask;
+        hash = hash; // + (now);
+        hash &= mask;
+        hash = hash; // + (now);
+        hash &= mask;
+        hash = hash; // + (now);
+        hash &= mask;
+        hash = hash; // + (now);
+        now += 6;
+        hash &= mask;
+    }
+    return (int) hash + mask;
+}
+
+
+int Test1_short_mult(int count_of_iterations) {
+    short mask = (1<<12)-1;
+    short hash = 0, now = 1;
+    count_of_iterations /= 6;
+    for (int i=0; i<count_of_iterations; ++i) {
+        hash = hash * (now);
+        hash &= mask;
+        hash = hash * (now);
+        hash &= mask;
+        hash = hash * (now);
+        hash &= mask;
+        hash = hash * (now);
+        hash &= mask;
+        hash = hash * (now);
+        hash &= mask;
+        hash = hash * (now);
+        now += 6;
+        hash &= mask;
+    }
+    return (int) hash + mask;
+}
+
+int Test1_short_mult_empty(int count_of_iterations) {
+    short mask = (1<<12)-1;
+    short hash = 0, now = 1;
+    count_of_iterations /= 6;
+    for (int i=0; i<count_of_iterations; ++i) {
+        hash = hash; // * (now);
+        hash &= mask;
+        hash = hash; // * (now);
+        hash &= mask;
+        hash = hash; // * (now);
+        hash &= mask;
+        hash = hash; // * (now);
+        hash &= mask;
+        hash = hash; // * (now);
+        hash &= mask;
+        hash = hash; // * (now);
+        now += 6;
+        hash &= mask;
+    }
+    return (int) hash + mask;
+}
+
+
 int Test1_short_mod(int count_of_iterations) {
     short mask = (1<<12)-1;
     short hash = 0, now = 1;
@@ -455,6 +275,96 @@ int Test1_short_mod_empty(int count_of_iterations) {
 }
 
 
+int Test1_int_plus(int count_of_iterations) {
+    int mask = (1<<12)-1;
+    int hash = 0, now = 1;
+    count_of_iterations /= 6;
+    for (int i=0; i<count_of_iterations; ++i) {
+        hash = hash + (now);
+        hash &= mask;
+        hash = hash + (now);
+        hash &= mask;
+        hash = hash + (now);
+        hash &= mask;
+        hash = hash + (now);
+        hash &= mask;
+        hash = hash + (now);
+        hash &= mask;
+        hash = hash + (now);
+        now += 6;
+        hash &= mask;
+    }
+    return (int) hash + mask;
+}
+
+int Test1_int_plus_empty(int count_of_iterations) {
+    int mask = (1<<12)-1;
+    int hash = 0, now = 1;
+    count_of_iterations /= 6;
+    for (int i=0; i<count_of_iterations; ++i) {
+        hash = hash; // + (now);
+        hash &= mask;
+        hash = hash; // + (now);
+        hash &= mask;
+        hash = hash; // + (now);
+        hash &= mask;
+        hash = hash; // + (now);
+        hash &= mask;
+        hash = hash; // + (now);
+        hash &= mask;
+        hash = hash; // + (now);
+        now += 6;
+        hash &= mask;
+    }
+    return (int) hash + mask;
+}
+
+
+int Test1_int_mult(int count_of_iterations) {
+    int mask = (1<<12)-1;
+    int hash = 0, now = 1;
+    count_of_iterations /= 6;
+    for (int i=0; i<count_of_iterations; ++i) {
+        hash = hash * (now);
+        hash &= mask;
+        hash = hash * (now);
+        hash &= mask;
+        hash = hash * (now);
+        hash &= mask;
+        hash = hash * (now);
+        hash &= mask;
+        hash = hash * (now);
+        hash &= mask;
+        hash = hash * (now);
+        now += 6;
+        hash &= mask;
+    }
+    return (int) hash + mask;
+}
+
+int Test1_int_mult_empty(int count_of_iterations) {
+    int mask = (1<<12)-1;
+    int hash = 0, now = 1;
+    count_of_iterations /= 6;
+    for (int i=0; i<count_of_iterations; ++i) {
+        hash = hash; // * (now);
+        hash &= mask;
+        hash = hash; // * (now);
+        hash &= mask;
+        hash = hash; // * (now);
+        hash &= mask;
+        hash = hash; // * (now);
+        hash &= mask;
+        hash = hash; // * (now);
+        hash &= mask;
+        hash = hash; // * (now);
+        now += 6;
+        hash &= mask;
+    }
+    return (int) hash + mask;
+}
+
+
 int Test1_int_mod(int count_of_iterations) {
     int mask = (1<<12)-1;
     int hash = 0, now = 1;
@@ -493,6 +403,96 @@ int Test1_int_mod_empty(int count_of_iterations) {
         hash = hash; // % (now);
         hash &= mask;
         hash = hash; // % (now);
+        now += 6;
+        hash &= mask;
+    }
+    return (int) hash + mask;
+}
+
+
+int Test1_longlong_plus(int count_of_iterations) {
+    long long mask = (1<<12)-1;
+    long long hash = 0, now = 1;
+    count_of_iterations /= 6;
+    for (int i=0; i<count_of_iterations; ++i) {
+        hash = hash + (now);
+        hash &= mask;
+        hash = hash + (now);
+        hash &= mask;
+        hash = hash + (now);
+        hash &= mask;
+        hash = hash + (now);
+        hash &= mask;
+        hash = hash + (now);
+        hash &= mask;
+        hash = hash + (now);
+        now += 6;
+        hash &= mask;
+    }
+    return (int) hash + mask;
+}
+
+int Test1_longlong_plus_empty(int count_of_iterations) {
+    long long mask = (1<<12)-1;
+    long long hash = 0, now = 1;
+    count_of_iterations /= 6;
+    for (int i=0; i<count_of_iterations; ++i) {
+        hash = hash; // + (now);
+        hash &= mask;
+        hash = hash; // + (now);
+        hash &= mask;
+        hash = hash; // + (now);
+        hash &= mask;
+        hash = hash; // + (now);
+        hash &= mask;
+        hash = hash; // + (now);
+        hash &= mask;
+        hash = hash; // + (now);
+        now += 6;
+        hash &= mask;
+    }
+    return (int) hash + mask;
+}
+
+
+int Test1_longlong_mult(int count_of_iterations) {
+    long long mask = (1<<12)-1;
+    long long hash = 0, now = 1;
+    count_of_iterations /= 6;
+    for (int i=0; i<count_of_iterations; ++i) {
+        hash = hash * (now);
+        hash &= mask;
+        hash = hash * (now);
+        hash &= mask;
+        hash = hash * (now);
+        hash &= mask;
+        hash = hash * (now);
+        hash &= mask;
+        hash = hash * (now);
+        hash &= mask;
+        hash = hash * (now);
+        now += 6;
+        hash &= mask;
+    }
+    return (int) hash + mask;
+}
+
+int Test1_longlong_mult_empty(int count_of_iterations) {
+    long long mask = (1<<12)-1;
+    long long hash = 0, now = 1;
+    count_of_iterations /= 6;
+    for (int i=0; i<count_of_iterations; ++i) {
+        hash = hash; // * (now);
+        hash &= mask;
+        hash = hash; // * (now);
+        hash &= mask;
+        hash = hash; // * (now);
+        hash &= mask;
+        hash = hash; // * (now);
+        hash &= mask;
+        hash = hash; // * (now);
+        hash &= mask;
+        hash = hash; // * (now);
         now += 6;
         hash &= mask;
     }
@@ -854,53 +854,11 @@ vector<Measure> list_of_tests = {
        Test1_char_plus_empty
    ),
    Measure(
-       "short",
-       "+", "plus",
-       "", "",
-       Test1_short_plus,
-       Test1_short_plus_empty
-   ),
-   Measure(
-       "int",
-       "+", "plus",
-       "", "",
-       Test1_int_plus,
-       Test1_int_plus_empty
-   ),
-   Measure(
-       "long long",
-       "+", "plus",
-       "", "",
-       Test1_longlong_plus,
-       Test1_longlong_plus_empty
-   ),
-   Measure(
        "char",
        "*", "mult",
        "", "",
        Test1_char_mult,
        Test1_char_mult_empty
-   ),
-   Measure(
-       "short",
-       "*", "mult",
-       "", "",
-       Test1_short_mult,
-       Test1_short_mult_empty
-   ),
-   Measure(
-       "int",
-       "*", "mult",
-       "", "",
-       Test1_int_mult,
-       Test1_int_mult_empty
-   ),
-   Measure(
-       "long long",
-       "*", "mult",
-       "", "",
-       Test1_longlong_mult,
-       Test1_longlong_mult_empty
    ),
    Measure(
        "char",
@@ -911,6 +869,20 @@ vector<Measure> list_of_tests = {
    ),
    Measure(
        "short",
+       "+", "plus",
+       "", "",
+       Test1_short_plus,
+       Test1_short_plus_empty
+   ),
+   Measure(
+       "short",
+       "*", "mult",
+       "", "",
+       Test1_short_mult,
+       Test1_short_mult_empty
+   ),
+   Measure(
+       "short",
        "%", "mod",
        "", "",
        Test1_short_mod,
@@ -918,10 +890,38 @@ vector<Measure> list_of_tests = {
    ),
    Measure(
        "int",
+       "+", "plus",
+       "", "",
+       Test1_int_plus,
+       Test1_int_plus_empty
+   ),
+   Measure(
+       "int",
+       "*", "mult",
+       "", "",
+       Test1_int_mult,
+       Test1_int_mult_empty
+   ),
+   Measure(
+       "int",
        "%", "mod",
        "", "",
        Test1_int_mod,
        Test1_int_mod_empty
+   ),
+   Measure(
+       "long long",
+       "+", "plus",
+       "", "",
+       Test1_longlong_plus,
+       Test1_longlong_plus_empty
+   ),
+   Measure(
+       "long long",
+       "*", "mult",
+       "", "",
+       Test1_longlong_mult,
+       Test1_longlong_mult_empty
    ),
    Measure(
        "long long",
