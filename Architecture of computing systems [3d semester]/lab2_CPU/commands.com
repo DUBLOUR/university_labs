@@ -1,0 +1,4 @@
+MOV R1
+OR R2
+MOV R2
+OR R3
