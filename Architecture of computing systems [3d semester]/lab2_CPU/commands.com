@@ -8,4 +8,5 @@ OR 9    ; acc |= 9 = 13
 MOV R0  ; R0 = 13
 MOV -34 ; acc = -34
 OR R2   ; acc |= 13
+MOV R10 ; invalid, ignore
 MOV R1 
