@@ -65,6 +65,12 @@ VertexArray gen_hull(vector<PDD> dots) {
 
 }
 
+void generate_rand_field(int n, vector<CircleShape>& vertices, VertexArray& hull) {
+    vector<PDD> dots = gen_random_dots(n);
+    vertices = gen_vert(dots);
+    hull = gen_hull(dots);
+}
+
 
 int main()
 {
@@ -94,7 +100,7 @@ int main()
     
     
     sf::Font font;
-    sf::Text text;
+    sf::Text text, bottom_text;
     font.loadFromFile("HelveticaLTStd-Blk.otf");
     text.setFont(font);
     text.setString("Convex hull: Graham");
@@ -103,11 +109,21 @@ int main()
     text.setStyle(sf::Text::Regular);
     setOriginToCenter(text, 1, 0);
     text.setPosition(640/2, 5);
-        
-    vector<PDD> dots = gen_random_dots(20);
-    vector<CircleShape> vertices = gen_vert(dots);
-    VertexArray hull = gen_hull(dots);
+    
+    bottom_text.setFont(font);
+    bottom_text.setString("");
+    bottom_text.setCharacterSize(10);
+    bottom_text.setFillColor(Color(0, 0, 0, 255));
+    bottom_text.setStyle(sf::Text::Regular);
+    setOriginToCenter(bottom_text, 0, 0);
+    bottom_text.setPosition(3, 465);
 
+
+    vector<CircleShape> vertices; 
+    VertexArray hull;
+    generate_rand_field(20, vertices, hull);
+        
+    
     // sf::Vertex line[2];
     // line[0].position = sf::Vector2f(10, 0);
     // line[0].color  = sf::Color::Red;
@@ -121,16 +137,30 @@ int main()
             if (event.type == sf::Event::Closed)            
             window.close();
         }
-        window.clear(sf::Color::White);
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::F5)) {
+            generate_rand_field(20, vertices, hull);
+        }
+        bool mouse_pressed = false;
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+            mouse_pressed = true;
+        }
+        sf::Vector2i cursorePosition = sf::Mouse::getPosition(window);
+        // cout << cursorePosition.x << ' ' << cursorePosition.y << '\n';
         
+        std::ostringstream bottom_text_s; 
+        bottom_text_s << "cursor:\t" << cursorePosition.x << 'x' << cursorePosition.y;   
+        if (mouse_pressed)
+            bottom_text_s << "\tpress";
+        bottom_text.setString(bottom_text_s.str());
+    
 
+        window.clear(sf::Color::White);
         // window.draw(circle);
         window.draw(text);
-
+        window.draw(bottom_text);
         window.draw(hull);
         for (auto v:vertices)
             window.draw(v);
-
 
         window.display();
     }
