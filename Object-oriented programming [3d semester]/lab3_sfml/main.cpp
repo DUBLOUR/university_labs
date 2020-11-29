@@ -135,8 +135,11 @@ int main()
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)            
-            window.close();
+                window.close();
         }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+            window.close();
+
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::F5)) {
             generate_rand_field(20, vertices, hull);
         }
