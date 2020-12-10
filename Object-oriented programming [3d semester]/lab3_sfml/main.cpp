@@ -72,6 +72,93 @@ void generate_rand_field(int n, vector<CircleShape>& vertices, VertexArray& hull
 }
 
 
+class GrahemVisualiser {
+private:
+    int step;
+    vector<int> up,dn;
+    vector<pair<int,int>> events;
+    vector<bool> on_hull;
+public:
+    int cnt_dot;
+    vector<PDD> dots;
+    vector<CircleShape> vertices;
+    VertexArray hull;
+
+
+    GrahemVisualiser(int count_point) {
+        cnt_dot = count_point;
+        up.clear();
+        dn.clear();
+
+        dots = gen_random_dots(count_point);
+        vertices = gen_vert(dots);
+        events = ConvexHull(dots).events;
+        step = 0;
+        // cout << "events: "; for (auto i:events) cout << "(" << i.F << ' ' << i.S << ") "; cout << "\n";
+        // reverse(events.begin(), events.end());
+    }
+
+    void gen_hull_part() {
+        vector<int> ids = dn;
+        // ids.pop_back();
+        reverse(ids.begin(), ids.end());
+        ids.insert(ids.end(), up.begin(), up.end());
+
+        // cout << ":: "; for (int i:ids) cout << i << ' '; cout << "::\n";
+
+        int n = ids.size();
+        hull = VertexArray(sf::LineStrip, n);
+        for (int i=0; i<n; ++i) {
+            hull[i].position = sf::Vector2f(dots[ids[i]].F, dots[ids[i]].S);
+            hull[i].color = Color(255*(1-i%2), 0, 255*(i%2));
+        }
+
+        on_hull.clear();
+        on_hull.resize(cnt_dot, false);
+        for (int i:ids)
+            on_hull[i] = true;
+
+        for (int i=0; i<cnt_dot; ++i)
+            if (on_hull[i])
+                vertices[i].setFillColor(sf::Color(150, 250, 150));
+            else
+                vertices[i].setFillColor(sf::Color(150, 50, 250));
+
+    }
+
+
+    bool next() {
+        if (step == events.size())
+            return false;
+
+        auto now = events[step++];
+        if (now.F == +1) up.PB(now.S);
+        if (now.F == -1) up.pop_back();
+
+        if (now.F == +2) dn.PB(now.S);
+        if (now.F == -2) dn.pop_back();
+        gen_hull_part();
+
+        return step < events.size();
+    }
+
+
+    bool prev() {
+        if (!step)
+            return false;
+
+        auto now = events[--step];
+        if (now.F == -1) up.PB(now.S);
+        if (now.F == +1) up.pop_back();
+
+        if (now.F == -2) dn.PB(now.S);
+        if (now.F == +2) dn.pop_back();
+        gen_hull_part();
+
+        return step;
+    }
+};
+
 int main()
 {
 
@@ -130,6 +217,8 @@ int main()
     // line[1].position = sf::Vector2f(20, 0);
     // line[1].color = sf::Color::Red;
 
+    GrahemVisualiser gv(20);
+
     while (window.isOpen())
     {
         sf::Event event;
@@ -141,15 +230,30 @@ int main()
             window.close();
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::F5)) {
-            generate_rand_field(20, vertices, hull);
+            // generate_rand_field(20, vertices, hull);
+            gv = GrahemVisualiser(20);
+            vertices = gv.vertices;
+            hull = gv.hull;
         }
+
         bool mouse_pressed = false;
         if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
             mouse_pressed = true;
         }
-        sf::Vector2i cursorePosition = sf::Mouse::getPosition(window);
-        // cout << cursorePosition.x << ' ' << cursorePosition.y << '\n';
+
+
+        if (sf::Event::KeyReleased && sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+            gv.prev();
+            vertices = gv.vertices;
+            hull = gv.hull;
+        }
+        if (sf::Event::KeyReleased && sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+            gv.next();
+            vertices = gv.vertices;
+            hull = gv.hull;
+        }
         
+        sf::Vector2i cursorePosition = sf::Mouse::getPosition(window);
         std::ostringstream bottom_text_s; 
         bottom_text_s << "cursor:\t" << cursorePosition.x << 'x' << cursorePosition.y;   
         if (mouse_pressed)

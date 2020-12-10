@@ -9,16 +9,23 @@ using namespace std;
 class ConvexHull {
 private:
     const double eps = 1e-6;
+    int build_step;
+    bool finished;
 public:
     vector<pair<double,double>> v;
     // vector<pair<double,double>,int> a;
     vector<int> hull;
+    vector<pair<int,int>> events;
 
     ConvexHull(vector<pair<double, double>> _v){
         v = _v;
         hull.clear();
-        // runGraham();
-        runJarvis();
+        events.clear();
+        build_step = 0;
+        finished = false;
+
+        runGraham();
+        // runJarvis();
     }
 
     int sign(pair<double,double> a, pair<double,double> b, pair<double,double> c) {
@@ -50,19 +57,27 @@ public:
         auto p_st = a.front(),
              p_fn = a.back();
         vector<pair<pair<double,double>,int>> up,dn;
-        up.push_back(p_st);
-        dn.push_back(p_st);
+        up.PB(p_st);
+        dn.PB(p_st);
+        events.PB(MP(+1, p_st.S));
+        events.PB(MP(+2, p_st.S));
 
         for (int i=1; i<a.size(); ++i) {
             if (i == a.size()-1 || sign(p_st.F, a[i].F, p_fn.F) < 0) {
-                while (up.size() >= 2 && sign(up[up.size()-2].F, up.back().F, a[i].F) >= 0)
+                while (up.size() >= 2 && sign(up[up.size()-2].F, up.back().F, a[i].F) >= 0) {
+                    events.PB(MP(-1, up.back().S));
                     up.pop_back();
-                up.push_back(a[i]);
+                }
+                up.PB(a[i]);
+                events.PB(MP(+1, a[i].S));
             }
             if (i == a.size()-1 || sign(p_st.F, a[i].F, p_fn.F) > 0) {
-                while (dn.size() >= 2 && sign(dn[dn.size()-2].F, dn.back().F, a[i].F) <= 0)
+                while (dn.size() >= 2 && sign(dn[dn.size()-2].F, dn.back().F, a[i].F) <= 0) {
+                    events.PB(MP(-2, dn.back().S));
                     dn.pop_back();
-                dn.push_back(a[i]);
+                }
+                dn.PB(a[i]);
+                events.PB(MP(+2, a[i].S));
             }
         }
 
