@@ -219,6 +219,25 @@ namespace mt
     template<class X>
     const long double log_it<X, 0>::value = X::value;
 
+
+    template<template<class> class FUNC, class X, int N>
+    struct iter_func {
+        static const long double value;
+    };
+
+    template<template<class> class FUNC, class X, int N>
+    const long double iter_func<template<class> class FUNC, class X, int N>::value = 
+        FUNC< iter_func<FUNC, X, N-1> >::value;
+
+    // template<class FUNC, class X>
+    // struct iter_func<FUNC, X, 0> {
+    //     static const long double value;
+    // };
+
+    // template<class FUNC, class X>
+    // const long double iter_func<class FUNC, class X, 0>::value = X::value;
+
+
 }
 
 
