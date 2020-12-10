@@ -27,8 +27,8 @@ public:
         int algo_cnt = 2;
         algo_id = (algo_id % algo_cnt + algo_cnt) % algo_cnt;
         switch (algo_id) {
-            case 0: runGraham(); break;
-            case 1: runJarvis(); break;
+            case 0: runJarvis(); break;
+            case 1: runGraham(); break;
         }
     }
 
