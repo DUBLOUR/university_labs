@@ -11,6 +11,14 @@ typedef pair<double,double> PDD;
 #define F first
 
 
+const int       SCREEN_W = 640,
+                SCREEN_H = 480,
+                CNT_DOTS = 50;
+const string    WINDOW_NAME = "Karasick";
+
+
+
+
 
 template<class DRAWABLE>
 void setOriginToCenter(DRAWABLE& entity, double x=1, double y=1) {
@@ -20,12 +28,11 @@ void setOriginToCenter(DRAWABLE& entity, double x=1, double y=1) {
 }
 
 
-vector<PDD> gen_random_dots(int n) {
+vector<PDD> gen_random_dots(int n, int d = 50) {
     vector<PDD> res(n);
-    int d = 50;    
     for (PDD& x:res) {
-        x.F = rand() % (640 - 2*d) + d;
-        x.S = rand() % (480 - 2*d) + d;
+        x.F = rand() % (SCREEN_W - 2*d) + d;
+        x.S = rand() % (SCREEN_H - 2*d) + d;
     }
     return res;
 }
@@ -94,8 +101,6 @@ public:
         vertices = gen_vert(dots);
         events = ConvexHull(dots).events;
         step = 0;
-        // cout << "events: "; for (auto i:events) cout << "(" << i.F << ' ' << i.S << ") "; cout << "\n";
-        // reverse(events.begin(), events.end());
     }
 
     void gen_hull_part() {
@@ -120,7 +125,7 @@ public:
 
         for (int i=0; i<cnt_dot; ++i)
             if (on_hull[i])
-                vertices[i].setFillColor(sf::Color(150, 250, 150));
+                vertices[i].setFillColor(sf::Color(250, 50, 100));
             else
                 vertices[i].setFillColor(sf::Color(150, 50, 250));
 
@@ -159,6 +164,8 @@ public:
     }
 };
 
+
+
 int main()
 {
 
@@ -167,25 +174,15 @@ int main()
     sf::ContextSettings settings;
     settings.antialiasingLevel = 8;
     // settings.majorVersion = 2;
-
-    RenderWindow window(sf::VideoMode(640, 480), "SFML shapes", sf::Style::Default, settings);  
-    // RenderWindow window(sf::VideoMode(640, 480), "Karasick");
+    RenderWindow window(sf::VideoMode(SCREEN_W, SCREEN_H), 
+                        WINDOW_NAME, 
+                        sf::Style::Default, 
+                        settings);  
+    
     window.setVerticalSyncEnabled(true);
     // window.setFramerateLimit(60);
     
 
-    sf::CircleShape circle(20);
-    circle.setPointCount(10);
-    circle.setFillColor(sf::Color(150, 50, 250));
-
-    circle.setOutlineThickness(5.f);
-    circle.setOutlineColor(sf::Color(250, 150, 100));
-    setOriginToCenter(circle);
-    circle.setPosition(300, 100);
-    circle.setPosition(0, 0);
-    circle.setPosition(640, 480);
-    
-    
     sf::Font font;
     sf::Text text, bottom_text;
     font.loadFromFile("HelveticaLTStd-Blk.otf");
@@ -195,7 +192,7 @@ int main()
     text.setFillColor(Color(0, 0, 0, 255));
     text.setStyle(sf::Text::Regular);
     setOriginToCenter(text, 1, 0);
-    text.setPosition(640/2, 5);
+    text.setPosition(SCREEN_W/2, 5);
     
     bottom_text.setFont(font);
     bottom_text.setString("");
@@ -203,22 +200,11 @@ int main()
     bottom_text.setFillColor(Color(0, 0, 0, 255));
     bottom_text.setStyle(sf::Text::Regular);
     setOriginToCenter(bottom_text, 0, 0);
-    bottom_text.setPosition(3, 465);
+    bottom_text.setPosition(3, SCREEN_H-15);
 
 
-    vector<CircleShape> vertices; 
-    VertexArray hull;
-    generate_rand_field(20, vertices, hull);
-        
-    
-    // sf::Vertex line[2];
-    // line[0].position = sf::Vector2f(10, 0);
-    // line[0].color  = sf::Color::Red;
-    // line[1].position = sf::Vector2f(20, 0);
-    // line[1].color = sf::Color::Red;
-
-    GrahemVisualiser gv(20);
-
+    GrahemVisualiser gv(CNT_DOTS);
+    bool animation = false;
     while (window.isOpen())
     {
         sf::Event event;
@@ -226,33 +212,35 @@ int main()
             if (event.type == sf::Event::Closed)            
                 window.close();
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-            window.close();
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::F5)) {
-            // generate_rand_field(20, vertices, hull);
-            gv = GrahemVisualiser(20);
-            vertices = gv.vertices;
-            hull = gv.hull;
-        }
-
+        
         bool mouse_pressed = false;
         if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
             mouse_pressed = true;
         }
 
+        if (sf::Event::KeyReleased) {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) || sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+                window.close();
+            
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::F5)) {
+                gv = GrahemVisualiser(CNT_DOTS);
+                while (gv.next())
+                    ;
+                animation = false;
+            }
+            
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) 
+                gv.prev();
 
-        if (sf::Event::KeyReleased && sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-            gv.prev();
-            vertices = gv.vertices;
-            hull = gv.hull;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) 
+                gv.next();
+    
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) 
+                animation = true;
+
+            sf::sleep(sf::milliseconds(10));
         }
-        if (sf::Event::KeyReleased && sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-            gv.next();
-            vertices = gv.vertices;
-            hull = gv.hull;
-        }
-        
+                
         sf::Vector2i cursorePosition = sf::Mouse::getPosition(window);
         std::ostringstream bottom_text_s; 
         bottom_text_s << "cursor:\t" << cursorePosition.x << 'x' << cursorePosition.y;   
@@ -262,11 +250,11 @@ int main()
     
 
         window.clear(sf::Color::White);
-        // window.draw(circle);
+        
         window.draw(text);
         window.draw(bottom_text);
-        window.draw(hull);
-        for (auto v:vertices)
+        window.draw(gv.hull);
+        for (auto v:gv.vertices)
             window.draw(v);
 
         window.display();

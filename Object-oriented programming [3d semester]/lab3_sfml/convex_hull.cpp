@@ -9,8 +9,6 @@ using namespace std;
 class ConvexHull {
 private:
     const double eps = 1e-6;
-    int build_step;
-    bool finished;
 public:
     vector<pair<double,double>> v;
     // vector<pair<double,double>,int> a;
@@ -21,11 +19,9 @@ public:
         v = _v;
         hull.clear();
         events.clear();
-        build_step = 0;
-        finished = false;
-
-        runGraham();
-        // runJarvis();
+    
+        // runGraham();
+        runJarvis();
     }
 
     int sign(pair<double,double> a, pair<double,double> b, pair<double,double> c) {
@@ -109,19 +105,29 @@ public:
                 swap(a[i], a[0]);
         
         hull.PB(a[0].S);
+        events.PB(MP(+1,a[0].S));
         
         int k = 0;
         while (k < n) {
             ++k;
+            events.PB(MP(1,a[k].S));
             for (int j=k; j<n; ++j)
-                if (sign(a[k-1].F, a[k].F, a[j].F) < 0)
+                if (sign(a[k-1].F, a[k].F, a[j].F) < 0) {
+                    events.PB(MP(-1,events.back().S));
                     swap(a[k], a[j]);
+                    events.PB(MP(1,a[k].S));
+                }
 
-            if (sign(a[k-1].F, a[k].F, a[0].F) < 0)
+            
+            if (sign(a[k-1].F, a[k].F, a[0].F) < 0) {
+                events.PB(MP(-1,a[k].S));
                 break;
+            }
 
             hull.PB(a[k].S);
+            // events.PB(MP(1,a[k].S));
         } 
+        events.PB(events.front());
             
 
     }
