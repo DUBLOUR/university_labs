@@ -11,12 +11,9 @@ typedef pair<double,double> PDD;
 #define F first
 
 
-const int       SCREEN_W = 640,
-                SCREEN_H = 480,
-                CNT_DOTS = 50;
-const string    WINDOW_NAME = "Karasick";
-
-
+const int   CNT_DOTS = 50;
+const int   SCREEN_W = 640,
+            SCREEN_H = 480;
 
 
 
@@ -165,62 +162,115 @@ public:
 };
 
 
-
-int main()
-{
-
-
-
-    sf::ContextSettings settings;
-    settings.antialiasingLevel = 8;
-    // settings.majorVersion = 2;
-    RenderWindow window(sf::VideoMode(SCREEN_W, SCREEN_H), 
-                        WINDOW_NAME, 
-                        sf::Style::Default, 
-                        settings);  
-    
-    window.setVerticalSyncEnabled(true);
-    // window.setFramerateLimit(60);
-    
-
+class RootView {
+private:
+    const string    WINDOW_NAME = "Karasick";
+    const bool      ENABLE_VSYNC = true;    // vertical syncronisation; disable MAX_FPS option
+    const int       MAX_FPS = 60;           // 0 for disable
+    const int       ANTI_ALIASING = 8;
     sf::Font font;
-    sf::Text text, bottom_text;
-    font.loadFromFile("HelveticaLTStd-Blk.otf");
-    text.setFont(font);
-    text.setString("Convex hull: Graham");
-    text.setCharacterSize(16);
-    text.setFillColor(Color(0, 0, 0, 255));
-    text.setStyle(sf::Text::Regular);
-    setOriginToCenter(text, 1, 0);
-    text.setPosition(SCREEN_W/2, 5);
     
-    bottom_text.setFont(font);
-    bottom_text.setString("");
-    bottom_text.setCharacterSize(10);
-    bottom_text.setFillColor(Color(0, 0, 0, 255));
-    bottom_text.setStyle(sf::Text::Regular);
-    setOriginToCenter(bottom_text, 0, 0);
-    bottom_text.setPosition(3, SCREEN_H-15);
+public:    
+    sf::RenderWindow window;
+    sf::Text    text, 
+                bottom_text;
+        
+    RootView() {
+        cout << "$$$";
+        sf::ContextSettings settings;
+        settings.antialiasingLevel = ANTI_ALIASING;
+        // settings.majorVersion = 2;
+        window.create(sf::VideoMode(SCREEN_W, SCREEN_H), 
+                       WINDOW_NAME, 
+                       sf::Style::Default, 
+                       settings);  
+    
+        
+        if (ENABLE_VSYNC)  
+            window.setVerticalSyncEnabled(true);
+        else      
+            if (MAX_FPS)
+                window.setFramerateLimit(MAX_FPS);
+        
+        load_helvetica();
+        text = set_title_text("Convex hull: Graham");
+        bottom_text = set_bottom_text("");
+        cout << "$$$";
+    }
 
 
-    GrahemVisualiser gv(CNT_DOTS);
-    bool animation = false;
-    while (window.isOpen())
-    {
+    void load_helvetica() {
+        font.loadFromFile("HelveticaLTStd-Blk.otf");
+    }
+
+
+    sf::Text set_title_text(string str) {
+        sf::Text text;
+        text.setFont(font);
+        text.setString(str);
+        text.setCharacterSize(16);
+        text.setFillColor(Color(0, 0, 0, 255));
+        text.setStyle(sf::Text::Regular);
+        setOriginToCenter(text, 1, 0);
+        text.setPosition(SCREEN_W/2, 5);
+        return text;
+    }
+
+
+    sf::Text set_bottom_text(string t) {
+        sf::Text text;
+        text.setFont(font);
+        text.setString("");
+        text.setCharacterSize(10);
+        text.setFillColor(Color(0, 0, 0, 255));
+        text.setStyle(sf::Text::Regular);
+        setOriginToCenter(text, 0, 0);
+        text.setPosition(3, SCREEN_H-15);
+        return text;
+    }
+
+
+    void handle_window() {
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)            
                 window.close();
-        }
-        
+        }        
+    }
+
+
+    void handle_cursor() {
         bool mouse_pressed = false;
         if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
             mouse_pressed = true;
         }
 
+        sf::Vector2i cursorePosition = sf::Mouse::getPosition(window);
+        std::ostringstream bottom_text_s; 
+        bottom_text_s << "cursor:\t" << cursorePosition.x << 'x' << cursorePosition.y;   
+        if (mouse_pressed)
+            bottom_text_s << "\tpress";
+        bottom_text.setString(bottom_text_s.str());
+    }
+
+};
+
+
+int main()
+{
+
+    RootView rview();
+
+    GrahemVisualiser gv(CNT_DOTS);
+    bool animation = false;
+    while (rview.window.isOpen())
+    {
+        rview.handle_window();  
+        rview.handle_cursor();
+        
         if (sf::Event::KeyReleased) {
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) || sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
-                window.close();
+                rview.window.close();
             
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::F5)) {
                 gv = GrahemVisualiser(CNT_DOTS);
@@ -240,24 +290,18 @@ int main()
 
             sf::sleep(sf::milliseconds(10));
         }
-                
-        sf::Vector2i cursorePosition = sf::Mouse::getPosition(window);
-        std::ostringstream bottom_text_s; 
-        bottom_text_s << "cursor:\t" << cursorePosition.x << 'x' << cursorePosition.y;   
-        if (mouse_pressed)
-            bottom_text_s << "\tpress";
-        bottom_text.setString(bottom_text_s.str());
-    
-
-        window.clear(sf::Color::White);
         
-        window.draw(text);
-        window.draw(bottom_text);
-        window.draw(gv.hull);
-        for (auto v:gv.vertices)
-            window.draw(v);
 
-        window.display();
+
+
+        rview.window.clear(sf::Color::White);
+        rview.window.draw(rview.text);
+        rview.window.draw(rview.bottom_text);
+        rview.window.draw(gv.hull);
+        for (auto v:gv.vertices)
+            rview.window.draw(v);
+
+        rview.window.display();
     }
     return 0;
 }
