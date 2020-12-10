@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
+typedef pair<double,double> PDD;
 #define MP make_pair
 #define PB push_back
 #define S second
@@ -10,21 +11,28 @@ class ConvexHull {
 private:
     const double eps = 1e-6;
 public:
-    vector<pair<double,double>> v;
-    // vector<pair<double,double>,int> a;
+    vector<PDD> v;
     vector<int> hull;
     vector<pair<int,int>> events;
 
-    ConvexHull(vector<pair<double, double>> _v){
+    ConvexHull(vector<pair<double, double>> _v, int algo_id){
         v = _v;
         hull.clear();
         events.clear();
     
-        // runGraham();
-        runJarvis();
+        run(algo_id);
     }
 
-    int sign(pair<double,double> a, pair<double,double> b, pair<double,double> c) {
+    void run(int algo_id) {
+        int algo_cnt = 2;
+        algo_id = (algo_id % algo_cnt + algo_cnt) % algo_cnt;
+        switch (algo_id) {
+            case 0: runGraham(); break;
+            case 1: runJarvis(); break;
+        }
+    }
+
+    int sign(PDD a, PDD b, PDD c) {
         double s = 
             a.F * (b.S - c.S) +
             b.F * (c.S - a.S) + 
@@ -38,7 +46,7 @@ public:
     }
 
     void runGraham(){
-        vector<pair<pair<double,double>,int>> a(v.size());
+        vector<pair<PDD,int>> a(v.size());
         for (int i=0; i<v.size(); ++i)
             a[i] = MP(v[i], i);
 
@@ -52,7 +60,7 @@ public:
 
         auto p_st = a.front(),
              p_fn = a.back();
-        vector<pair<pair<double,double>,int>> up,dn;
+        vector<pair<PDD,int>> up,dn;
         up.PB(p_st);
         dn.PB(p_st);
         events.PB(MP(+1, p_st.S));
@@ -81,16 +89,14 @@ public:
         for (auto i:up)
             hull.PB(i.S);
         for (auto i=dn.size()-1; i; --i)
-            hull.PB(dn[i].S);
-
-    
+            hull.PB(dn[i].S);    
     }
 
     
     // https://neerc.ifmo.ru/wiki/index.php?title=%D0%A1%D1%82%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5_%D0%B2%D1%8B%D0%BF%D1%83%D0%BA%D0%BB%D1%8B%D0%B5_%D0%BE%D0%B1%D0%BE%D0%BB%D0%BE%D1%87%D0%BA%D0%B8:_%D0%94%D0%B6%D0%B0%D1%80%D0%B2%D0%B8%D1%81,_%D0%93%D1%80%D1%8D%D1%85%D0%B5%D0%BC,_%D0%AD%D0%BD%D0%B4%D1%80%D1%8E,_%D0%A7%D0%B5%D0%BD,_QuickHull#.D0.90.D0.BB.D0.B3.D0.BE.D1.80.D0.B8.D1.82.D0.BC_.D0.94.D0.B6.D0.B0.D1.80.D0.B2.D0.B8.D1.81.D0.B0
     void runJarvis(){
         int n = v.size();
-        vector<pair<pair<double,double>,int>> a(n);
+        vector<pair<PDD,int>> a(n);
         for (int i=0; i<n; ++i)
             a[i] = MP(v[i], i);
 

@@ -3,18 +3,16 @@
 #include "convex_hull.cpp"
 using namespace std;
 using namespace sf;
-
 typedef pair<double,double> PDD;
 #define MP make_pair
 #define PB push_back
 #define S second
 #define F first
 
-
-const int   CNT_DOTS = 50;
-const int   SCREEN_W = 640,
-            SCREEN_H = 480;
-
+const int       SCREEN_W = 640,
+                SCREEN_H = 480,
+                CNT_DOTS = 25;
+const string    WINDOW_NAME = "Karasick";
 
 
 template<class DRAWABLE>
@@ -55,28 +53,7 @@ vector<CircleShape> gen_vert(vector<PDD>& dots) {
 }
 
 
-VertexArray gen_hull(vector<PDD> dots) {
-    vector<int> ids = ConvexHull(dots).hull;
-    ids.push_back(ids[0]);
-
-    int n = ids.size();
-    VertexArray res(sf::LineStrip, n);
-    for (int i=0; i<n; ++i) {
-        res[i].position = sf::Vector2f(dots[ids[i]].F, dots[ids[i]].S);
-        res[i].color = Color(255*(1-i%2), 0, 255*(i%2));
-    }
-    return res;
-
-}
-
-void generate_rand_field(int n, vector<CircleShape>& vertices, VertexArray& hull) {
-    vector<PDD> dots = gen_random_dots(n);
-    vertices = gen_vert(dots);
-    hull = gen_hull(dots);
-}
-
-
-class GrahemVisualiser {
+class HullVisualiser {
 private:
     int step;
     vector<int> up,dn;
@@ -89,14 +66,14 @@ public:
     VertexArray hull;
 
 
-    GrahemVisualiser(int count_point) {
+    HullVisualiser(int count_point, int algo) {
         cnt_dot = count_point;
         up.clear();
         dn.clear();
 
         dots = gen_random_dots(count_point);
         vertices = gen_vert(dots);
-        events = ConvexHull(dots).events;
+        events = ConvexHull(dots, algo).events;
         step = 0;
     }
 
@@ -109,6 +86,7 @@ public:
         // cout << ":: "; for (int i:ids) cout << i << ' '; cout << "::\n";
 
         int n = ids.size();
+        hull.clear();
         hull = VertexArray(sf::LineStrip, n);
         for (int i=0; i<n; ++i) {
             hull[i].position = sf::Vector2f(dots[ids[i]].F, dots[ids[i]].S);
@@ -162,49 +140,27 @@ public:
 };
 
 
-class RootView {
-private:
-    const string    WINDOW_NAME = "Karasick";
-    const bool      ENABLE_VSYNC = true;    // vertical syncronisation; disable MAX_FPS option
-    const int       MAX_FPS = 60;           // 0 for disable
-    const int       ANTI_ALIASING = 8;
+
+class Scene {
+public:
     sf::Font font;
-    
-public:    
-    sf::RenderWindow window;
-    sf::Text    text, 
-                bottom_text;
-        
-    RootView() {
-        cout << "$$$";
-        sf::ContextSettings settings;
-        settings.antialiasingLevel = ANTI_ALIASING;
-        // settings.majorVersion = 2;
-        window.create(sf::VideoMode(SCREEN_W, SCREEN_H), 
-                       WINDOW_NAME, 
-                       sf::Style::Default, 
-                       settings);  
-    
-        
-        if (ENABLE_VSYNC)  
-            window.setVerticalSyncEnabled(true);
-        else      
-            if (MAX_FPS)
-                window.setFramerateLimit(MAX_FPS);
-        
-        load_helvetica();
-        text = set_title_text("Convex hull: Graham");
-        bottom_text = set_bottom_text("");
-        cout << "$$$";
+    sf::Text title_text, bottom_text, med_text;
+    int algo;
+
+    Scene() {
+        init();
     }
 
 
-    void load_helvetica() {
+    void init() {
         font.loadFromFile("HelveticaLTStd-Blk.otf");
+        title_text = set_title_text("", font);
+        med_text = set_med_text("", font);
+        bottom_text = set_bottom_text("", font);
     }
 
 
-    sf::Text set_title_text(string str) {
+    sf::Text set_title_text(string str, sf::Font& font) {
         sf::Text text;
         text.setFont(font);
         text.setString(str);
@@ -217,10 +173,23 @@ public:
     }
 
 
-    sf::Text set_bottom_text(string t) {
+    sf::Text set_med_text(string str, sf::Font& font) {
         sf::Text text;
         text.setFont(font);
-        text.setString("");
+        text.setString(str);
+        text.setCharacterSize(14);
+        text.setFillColor(Color(0, 0, 0, 255));
+        text.setStyle(sf::Text::Regular);
+        setOriginToCenter(text, 1, 1);
+        text.setPosition(10, 50);
+        return text;
+    }
+
+
+    sf::Text set_bottom_text(string str, sf::Font& font) {
+        sf::Text text;
+        text.setFont(font);
+        text.setString(str);
         text.setCharacterSize(10);
         text.setFillColor(Color(0, 0, 0, 255));
         text.setStyle(sf::Text::Regular);
@@ -230,53 +199,90 @@ public:
     }
 
 
-    void handle_window() {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)            
-                window.close();
-        }        
-    }
-
-
-    void handle_cursor() {
-        bool mouse_pressed = false;
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-            mouse_pressed = true;
-        }
-
+    string get_cursor_text(RenderWindow& window) {
         sf::Vector2i cursorePosition = sf::Mouse::getPosition(window);
         std::ostringstream bottom_text_s; 
         bottom_text_s << "cursor:\t" << cursorePosition.x << 'x' << cursorePosition.y;   
-        if (mouse_pressed)
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
             bottom_text_s << "\tpress";
-        bottom_text.setString(bottom_text_s.str());
+        return bottom_text_s.str();
     }
+};
 
+
+class MenuScene: public Scene {
+public:
+    MenuScene() {
+        init();
+        title_text.setString("Menu");
+        med_text.setString(
+            "Press 1 for back to the Menu\n"
+            "2 for Grahem, 3 for Jarvis algo\n\n"
+            "F5 for generate new points\n"
+            "Left/Right arrows for animate build\n"
+            "ESC or Q for exit");
+    }
+};
+
+class GrahemScene: public Scene {
+public:
+    GrahemScene() {
+        init();
+        title_text.setString("Convex hull: Graham");
+        algo = 0;
+    }
+};
+
+
+class JarvisScene: public Scene {
+public:
+    JarvisScene() {
+        init();
+        title_text.setString("Convex hull: Jarvis");
+        algo = 1;
+    }
 };
 
 
 int main()
 {
 
-    RootView rview();
 
-    GrahemVisualiser gv(CNT_DOTS);
-    bool animation = false;
-    while (rview.window.isOpen())
+
+    sf::ContextSettings settings;
+    settings.antialiasingLevel = 8;
+    // settings.majorVersion = 2;
+    RenderWindow window(sf::VideoMode(SCREEN_W, SCREEN_H), 
+                        WINDOW_NAME, 
+                        sf::Style::Default, 
+                        settings);  
+    
+    window.setVerticalSyncEnabled(true);
+    // window.setFramerateLimit(60);
+    
+
+    
+    HullVisualiser gv(CNT_DOTS, 0);
+
+    Scene *scenes[3] = {new MenuScene(), new GrahemScene(), new JarvisScene()};
+    int scene_id = 0;
+
+    while (window.isOpen())
     {
-        rview.handle_window();  
-        rview.handle_cursor();
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)            
+                window.close();
+        }
         
         if (sf::Event::KeyReleased) {
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) || sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
-                rview.window.close();
+                window.close();
             
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::F5)) {
-                gv = GrahemVisualiser(CNT_DOTS);
+                gv = HullVisualiser(CNT_DOTS, scene_id-1);
                 while (gv.next())
                     ;
-                animation = false;
             }
             
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) 
@@ -285,23 +291,51 @@ int main()
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) 
                 gv.next();
     
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) 
-                animation = true;
+            // if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) 
+            //     animation = true;
+
+            int new_scene = scene_id;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) new_scene = 0;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) new_scene = 1;            
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num3)) new_scene = 2;
+            if (new_scene != scene_id) {
+                scene_id = new_scene;
+                gv = HullVisualiser(CNT_DOTS, scene_id);
+                while (gv.next())
+                    ;
+            }
 
             sf::sleep(sf::milliseconds(10));
         }
+                
+        scenes[scene_id] -> bottom_text.setString(scenes[scene_id] -> get_cursor_text(window));
+    
+
+        window.clear(sf::Color::White);
         
+        switch (scene_id) {
+            case 0:
+                window.draw(scenes[scene_id] -> title_text);
+                window.draw(scenes[scene_id] -> med_text);
+                break;
+            case 1:
+                window.draw(scenes[scene_id] -> title_text);
+                window.draw(scenes[scene_id] -> bottom_text);
+                window.draw(gv.hull);
+                for (auto v:gv.vertices)
+                    window.draw(v);
+                break;
 
-
-
-        rview.window.clear(sf::Color::White);
-        rview.window.draw(rview.text);
-        rview.window.draw(rview.bottom_text);
-        rview.window.draw(gv.hull);
-        for (auto v:gv.vertices)
-            rview.window.draw(v);
-
-        rview.window.display();
+            case 2:
+                window.draw(scenes[scene_id] -> title_text);
+                window.draw(scenes[scene_id] -> bottom_text);
+                window.draw(gv.hull);
+                for (auto v:gv.vertices)
+                    window.draw(v);
+                break;
+        }
+        
+        window.display();
     }
     return 0;
 }
