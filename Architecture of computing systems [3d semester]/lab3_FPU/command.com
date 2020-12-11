@@ -1,4 +1,28 @@
 ; comment has implemented
+PUSH 5
+PUSH 3
+CPY 1     ; =a
+CPY 1     ; =b
+SWP
+; stack = [a, b, a, b]
+SUB       ; =a-b
+; [a, b, a-b]
+CPY 2     ; =a
+CPY 2     ; =b
+; [a, b, a-b, b, a]
+ADD
+; [a, b, a-b, a+b]
+DIV       
+; [a, b, (a+b)/(a-b)]
+SWP
+POP
+SWP
+POP
+; [(a+b)/(a-b)]
+
+
+
+; comment has implemented
 PUSH a
 PUSH b
 SUB     ; remove last 2 and
