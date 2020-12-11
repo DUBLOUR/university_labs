@@ -10,54 +10,29 @@
 #   DIV         ; remove 2 element, add their quotient
 # (for birany functions left element is top of stack)
 
-# PUSH a
-# PUSH b
-# CPY 1     ; =a
-# CPY 1     ; =b
-# SWP
-# ; stack = [a, b, a, b]
-# SUB       ; =a-b
-# ; stack = [a, b, a-b]
-# CPY 2     ; =a
-# CPY 2     ; =b
-# ; stack = [a, b, a-b, b, a]
-# ADD
-# ; stack = [a, b, a-b, a+b]
-# DIV       ; 
-# ; stack = [a, b, (a+b)/(a-b)]
-# SWP
-# POP
-# SWP
-# POP
-# ; stack = [(a+b)/(a-b)]
-
-# 𓆏
-
 
 import random
 import math
+from copy import deepcopy
 
 class MyFloat:
     EXP_BIT = 10
-    MANTISSA_BIT = 5
+    MANTISSA_BIT = 8
 
-    __EXP_SHIFT = (1 << (EXP_BIT - 1)) - 1
-    __MAX_E = (1 << EXP_BIT) - 1
-    __MAX_M = (1 << MANTISSA_BIT) - 1
-    __MAX = 0
-    __MIN = 0
-    __NAN = 0
-    __INF_POS = 0
-    __INF_NEG = 0
-    # MAX = Number('0111111111111110111111111')
-    # MIN = Number('1111111111111110000000000')
-    # close_to_zero = Number('0000000000000001000000000')
-    # inf_pos = Number('0111111111111111000000000')
-    # inf_neg = Number('1111111111111111000000000')
-    # nan = Number('1111111111111111000000110')
+    EXP_SHIFT = (1 << (EXP_BIT - 1)) - 1
+    MAX_E = (1 << EXP_BIT) - 1
+    MAX_M = (1 << MANTISSA_BIT) - 1
+
+    NULL_POS = "0" + ("0" + "1" * (EXP_BIT-1)) + ("0" * MANTISSA_BIT)
+    NULL_NEG = "1" + ("0" + "1" * (EXP_BIT-1)) + ("0" * MANTISSA_BIT)
+    MAX = "0" + ("1" * (EXP_BIT-1) + "0") + ("1" * MANTISSA_BIT)
+    MIN = "1" + ("1" * (EXP_BIT-1) + "0") + ("1" * MANTISSA_BIT)
+    NAN = "1" + ("1" * EXP_BIT) + ("0" * (MANTISSA_BIT-1) + "1")
+    INF_POS = "0" + ("1" * EXP_BIT) + ("0" * MANTISSA_BIT)
+    INF_NEG = "1" + ("1" * EXP_BIT) + ("0" * MANTISSA_BIT)
 
 
-    def __init__(self, s):
+    def __init__(self, s = NULL_POS):
         if not isinstance(s, str):
             self.set(0, 0, 0)
         else:
@@ -67,18 +42,43 @@ class MyFloat:
 
 
     def set_float(self, x):
-        lg = int(math.log(x, 2))
-        self.E = lg + self.__EXP_SHIFT
-        self.M = int((x - 2**lg) * 2**(self.MANTISSA_BIT - lg) )
+        if x == float("+inf"): self.__init__(MyFloat().INF_POS); return self
+        if x == float("-inf"): self.__init__(MyFloat().INF_NEG); return self
+        if x != x:  self.__init__(MyFloat().NAN); return self
+        if x == float("+0.0"): self.__init__(MyFloat().NULL_POS); return self
+        if x == float("-0.0"): self.__init__(MyFloat().NULL_NEG); return self
+        
         self.S = x < 0
+        if x < 0:
+            x = -x
+
+        try:
+            lg = int(math.log(x, 2))
+            self.E = lg + self.EXP_SHIFT
+            if self.E < 1:
+                raise ValueError
+            self.M = int((x - 2**lg) * 2**(self.MANTISSA_BIT - lg) )
+        except: 
+            if self.S:
+                self.__init__(MyFloat().NULL_NEG)
+            else:
+                self.__init__(MyFloat().NULL_POS)
+        
+        return self
 
 
     def get_float(self):
+        if self.bin() == MyFloat().NULL_NEG: return float("-0.0")
+        if self.bin() == MyFloat().NULL_POS: return float("+0.0")
+        if self.bin() == MyFloat().INF_POS: return float("+inf")
+        if self.bin() == MyFloat().INF_NEG: return float("-inf")
+        if self.bin() == MyFloat().NAN: return float("nan")
+        
         res = 1 + (self.M / 2**self.MANTISSA_BIT);
-        res *= 2**(self.E - self.__EXP_SHIFT)
+        res *= 2**(self.E - self.EXP_SHIFT)
         if self.S:
             res = -res
-        return str(res)
+        return res
 
 
     def bound(self, l, x, r):
@@ -90,10 +90,9 @@ class MyFloat:
 
 
     def set(self, S, E, M):
-        print(S, E, M, self.__MAX_E)
         self.S = bool(S);
-        self.E = self.bound(0, int(E), self.__MAX_E);
-        self.M = self.bound(0, int(M), self.__MAX_M);
+        self.E = self.bound(0, int(E, 2), self.MAX_E);
+        self.M = self.bound(0, int(M, 2), self.MAX_M);
 
 
     def bin(self, sep=""):
@@ -102,87 +101,88 @@ class MyFloat:
         Es = "0" * (self.EXP_BIT - len(Es)) + Es
         Ms = bin(self.M)[2:]
         Ms = "0" * (self.MANTISSA_BIT - len(Ms)) + Ms
-        # print("   ", Ms + "_2 =", int(Ms, 2))
         return Ss + sep + Es + sep + Ms
     
 
+    def set_rand(self):
+        self.S = random.randint(0, 1);
+        self.E = random.randint(0, self.MAX_E)
+        self.M = random.randint(0, self.MAX_M)
+        return self;
+
+
     def __str__(self):
         specials = dict.fromkeys(
-            [self.__NAN, self.__INF_POS, self.__INF_NEG],
-            ["NaN", "+Inf", "-Inf"]
+            [MyFloat(self.NAN).bin(), 
+            MyFloat(self.INF_POS).bin(), 
+            MyFloat(self.INF_NEG).bin(), 
+            MyFloat(self.NULL_POS).bin(), 
+            MyFloat(self.NULL_NEG).bin()],
+            ["NaN", "+Inf", "-Inf", "+0.0", "-0.0"]
         )
         if self.bin() in specials:
             return specials[self.bin()]
         return str(self.get_float())
         
 
-t = math.acos(-1)
-x = MyFloat(0)
-x.set_float(t)
-print(t)
-print(x, "(", x.S, x.E, x.M, ")")
-print(x.bin(" "))
-print(x.get_float())
-#print( MyFloat(). )
-exit(0)
 
 class Processor:
-    def c_MOV(state, reg, val):
-        if val != None:
-            state.R_acc = val
-            state.R_state |= val & 1
-        if reg != None:
-            state.R[reg] = state.R_acc
-            state.R_state |= state.R_acc & 1
+    def c_PUSH(state, val):
+        state.R[state.R_ss] = deepcopy(val)
+        state.R_ss += 1
 
-    def c_OR(state, reg, val):
-        if val != None:
-            state.R_acc |= val
-        if reg != None:
-            state.R_acc |= state.R[reg]
-        state.R_state |= state.R_acc & 1
+    def c_CPY(state, val):
+        state.R[state.R_ss] = deepcopy(state.R[state.R_ss - 1 - val])
+        state.R_ss += 1
+        
+    def c_POP(state, val=None):
+        state.R_ss -= 1
+        
+    def c_SWP(state, val=None):
+        state.R[state.R_ss-1], state.R[state.R_ss-2] = state.R[state.R_ss-2], state.R[state.R_ss-1]
+        
+    def c_ADD(state, val=None):
+        x = state.R[state.R_ss-1].get_float()
+        state.R_ss -= 1
+        y = state.R[state.R_ss-1].get_float()
+        state.R[state.R_ss-1].set_float(x + y)
+        
+    def c_SUB(state, val=None):
+        x = state.R[state.R_ss-1].get_float()
+        state.R_ss -= 1
+        y = state.R[state.R_ss-1].get_float()
+        state.R[state.R_ss-1] = MyFloat().set_float(x - y) 
 
+    
+    def c_DIV(state, val=None):
+        x = state.R[state.R_ss-1].get_float()
+        state.R_ss -= 1
+        y = state.R[state.R_ss-1].get_float()
+        try:
+            res = x / y
+        except ZeroDivisionError:
+            res = float("nan")
+        state.R[state.R_ss-1].set_float(res)
+    
 
     tick_count = 2
     register_count = 8
-    word_size = 28
-    commands = {"MOV":c_MOV, "OR":c_OR}
-
-
-    def parse_num(x:int) -> (int, bool):
-        p = 2**Processor.word_size;
-        if not(-p <= x < p):
-            return None, True
-
-        if x >= 0:
-            return x, None
-        else:
-            return ((-x) ^ (p-1))+1, None
-
-
-    def parse_reg(s:str) -> (int, bool):
-        if not len(s) or s[0] != "R":
-            return None, True
-        x = int(s[1:])
-        if not(0 <= x < Processor.register_count):
-            return None, True
-        return x, None
-
-
-    def bits(x:int) -> str:
-        if x < 0:
-            x, _ = Processor.parse_num(x)
-        s = bin(x)[2:];
-        pref = "0" * (Processor.word_size - len(s))
-        return pref + s
-
+    commands = {
+        "PUSH":c_PUSH, 
+        "CPY":c_CPY, 
+        "POP":c_POP, 
+        "SWP":c_SWP, 
+        "ADD":c_ADD, 
+        "SUB":c_SUB, 
+        "DIV":c_DIV
+    }
 
 
 class PState(Processor):
         # Registers:
-    R = [0] * Processor.register_count
+    R = [MyFloat() for i in range(Processor.register_count)]
     R_comm = ""     # text literal of current command
-    R_acc = 0       # accumulator
+    R_ss = 0        # stack selector, id of first non-used element
     R_state = 0     # last bit for sign, pre-last for invalid command 
     R_tick = 0      # from `0` to tick_count-1
     R_cTick = 0     # sequence number of current command
@@ -196,16 +196,23 @@ class PState(Processor):
         def w(name, val):
             num = ""
             if isinstance(val, int):
+                width = 8
                 num = f" ({val})"
-                val = Processor.bits(val)
+                val = bin(val)[2:]
+                val = "0" * (width - len(val)) + val
 
+            if isinstance(val, MyFloat):
+                num = " ({0:+.6e})".format(val.get_float())
+                val = val.bin("_")
+            
             print(" {:<7} : {}{}".format(name, val, num))
 
+
         w("R_comm", self.R_comm)
-        w("R_acc", self.R_acc)
         for i in range(Processor.register_count):
             w("R"+str(i), self.R[i])
 
+        w("R_ss", self.R_ss)
         w("R_state", self.R_state)
         w("R_tick", self.R_tick)
         w("R_cTick", self.R_cTick)
@@ -214,41 +221,43 @@ class PState(Processor):
         print()
 
 
-    def init_random(self):
-        def get_rand():
-            return random.randint(0, 2**Processor.word_size-1)
-        
-        self.R_acc = get_rand()
+    def init_random(self):        
         for i in range(Processor.register_count):
-            self.R[i] = get_rand();
+            self.R[i] = MyFloat().set_rand();
 
 
     def do(self, oper, arg):
         def command_parse():
-            val, reg, handler, err = None, None, None, None
+            val, handler, err = None, None, None
             
-            is_const = arg[0] != 'R'
-            if is_const:
-                val, err = Processor.parse_num(int(arg))
-            else:
-                reg, err = Processor.parse_reg(arg)
+            if arg != "":
+                is_float = '.' in arg
+                # try:
+                if is_float:
+                    val = MyFloat().set_float(float(arg))
+                else:
+                    val = int(arg)
+                # except:
+                #     err = True
 
             if oper in Processor.commands:
                 handler = Processor.commands[oper]
             else:
                 err = True
 
-            return handler, val, reg, err
+            return handler, val, err
 
 
         self.R_cTick += 1
         self.R_tick = 0
         self.R_state = (self.R_state | 2) ^ 2
 
-        handler, val, reg, err = command_parse()
+        handler, val, err = command_parse()
 
-        self.R_comm = oper + " " + (arg if reg != None or err else Processor.bits(val))
-        self.R_comm = oper + " " + arg
+        self.R_comm = oper
+        if arg != None:
+            self.R_comm += " " + arg
+
         self.write()
 
         self.R_tick += 1
@@ -256,13 +265,14 @@ class PState(Processor):
             self.R_state |= 2
         else:
             self.R_state = (self.R_state | 1) ^ 1
-            handler(self, reg, val)
+            handler(self, val)
 
         self.write()
 
 
 
 def read_instructions(filename = "commands.com"):
+    cnt_args = 2
     commands = []
 
     file = open(filename, "r")
@@ -274,7 +284,10 @@ def read_instructions(filename = "commands.com"):
             pass
 
         args = line.split()
-        commands.append(args)
+        if len(args) > 0:
+            while len(args) < cnt_args:
+                args.append("")
+            commands.append(args)
     file.close()
 
     return commands;
