@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 #include <SFML/Graphics.hpp>
+#include "palette.h"
 using namespace std;
 using namespace sf;
 typedef pair<double,double> PDD;
@@ -11,7 +12,7 @@ typedef pair<double,double> PDD;
 const int SCREEN_W = 640,
           SCREEN_H = 480;
 const double PI = acosl(-1);
-const std::string WINDOW_NAME = "Convex-hull";
+const std::string WINDOW_NAME = "Hexar";
 
 
 template<class DRAWABLE>
@@ -42,8 +43,8 @@ public:
             state = 0;
             object = CircleShape(Map::cell_size, 6);
             object.setFillColor(color);
-            object.setOutlineThickness(1);
-            object.setOutlineColor(sf::Color(0, 0, 0));
+            object.setOutlineThickness(2);
+            object.setOutlineColor(Palette::fieldBg);
             setOriginToCenter(object);
             object.setRotation(360 / 6 / 2);
             
@@ -61,7 +62,7 @@ public:
             sf::Text text;
             text.setFont(font);
             text.setString(label.str());
-            text.setCharacterSize(12);
+            text.setCharacterSize(7);
             text.setFillColor(Color(0, 0, 0, 255));
             text.setStyle(sf::Text::Regular);
             setOriginToCenter(text);
@@ -95,28 +96,90 @@ public:
     void draw_map() {
         drawable.clear();
 
-        int w = 13, h = 8;
+        int w = 19, h = 12;
         for (int i=1; i<=w; ++i)
             for (int j=1; j<=h; ++j)
-                drawable.PB(Hexagon(i, j, sf::Color(127, 255, 127)));
+                drawable.PB(Hexagon(i, j, Palette::fieldCell));
 
-        // drawable.PB(Hexagon(0, 0, sf::Color(255, 0, 0)));
-        // drawable.PB(Hexagon(0, 1, sf::Color(255, 0, 0)));
-        // drawable.PB(Hexagon(1, 0, sf::Color(255, 0, 0)));
-        // drawable.PB(Hexagon(1, 1, sf::Color(255, 0, 0)));
-        // drawable.PB(Hexagon(2, 0, sf::Color(255, 0, 0)));
-        // drawable.PB(Hexagon(2, 1, sf::Color(255, 0, 0)));
     }
 };
 
-const int Map::cell_size = 30;
+const int Map::cell_size = 20;
 
+
+class Player {
+public:
+    const int head_size = 15;
+    const int tail_size = 4; 
+    CircleShape head;
+    vector<CircleShape> tail;
+    sf::Color color;
+    double x,y;
+    bool leave_tail = true;
+    int tail_spread = 10;
+    int tail_spread_ticker = 0;
+
+    Player(double sx, double sy, sf::Color col) {
+        x = sx;
+        y = sy;
+        color = col;
+
+        init_head();
+        start_tail();
+    }
+
+    void init_head() {
+        head = CircleShape(head_size, 32);
+        head.setFillColor(sf::Color(255, 255, 255));
+        head.setOutlineThickness(6);
+        head.setOutlineColor(color);
+        setOriginToCenter(head);
+        head.setPosition(x, y);
+    }
+
+    void start_tail() {
+        leave_tail = true;
+    }
+
+
+    void finish_tail() {
+        leave_tail = false;
+        tail.clear();
+    }
+
+
+    void add_tail_dot() {
+        if (++tail_spread_ticker == tail_spread) {
+            tail_spread_ticker = 0;
+            CircleShape dot(tail_size, 12);
+            dot.setFillColor(color);
+            setOriginToCenter(dot);
+            dot.setPosition(x, y);
+            tail.PB(dot);
+        }
+    }
+
+
+    void move_direction(double dx, double dy, double speed = 1) {
+        dx -= x; dy -= y;
+        double d = sqrt(dx*dx + dy*dy) / speed;
+        dx /= d; dy /= d;
+        
+        x += dx; y += dy;
+        head.setPosition(x, y);
+
+        if (leave_tail)
+            add_tail_dot();
+    }
+};
+
+// const int Player::head_size = 15;
 
 int main()
 {
 
     sf::ContextSettings settings;
-    // settings.antialiasingLevel = 8;
+    settings.antialiasingLevel = 8;
     // settings.majorVersion = 2;
     RenderWindow window(sf::VideoMode(SCREEN_W, SCREEN_H), 
                         WINDOW_NAME, 
@@ -131,6 +194,7 @@ int main()
     
 
     Map m(3);
+    Player p(200, 200, Palette::players[0]);
     
     
     while (window.isOpen())
@@ -151,15 +215,23 @@ int main()
             sf::sleep(sf::milliseconds(10));
         }
                 
-        // get_cursor_text(window);
-    
 
-        window.clear(sf::Color::White);
+        sf::Vector2i cursorePosition = sf::Mouse::getPosition(window);
+        p.move_direction(cursorePosition.x, cursorePosition.y);
+        
+
+        window.clear(Palette::fieldBg);
+        
         for (auto i:m.drawable) {
             // cout << sizeof(i) << '\n';
             window.draw(i.object);
             window.draw(i.object2);
         }
+        
+        for (auto i:p.tail) 
+            window.draw(i);
+        window.draw(p.head);
+        
         
         window.display();
     }
