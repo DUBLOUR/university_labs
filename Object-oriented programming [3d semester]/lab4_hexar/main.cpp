@@ -41,27 +41,32 @@ public:
 };
 class Player {
 public:
-    static const int head_size = 12;
+    static const int head_size = 18;
     static const int tail_size = 4; 
     CircleShape head;
     vector<CircleShape> tail;
-    int color;
     int id;
-    double x,y;
-    bool leave_tail = true;
+    int color;
     int tail_spread = 3;
     int tail_spread_ticker = 0;
-    double speed = 1.5*3, speed_bonus = 1.0;
+    int first_tail_id = 0;
+    double x,y;
+    double speed = 1.5*3;
+    double speed_bonus = 1.0;
+    bool leave_tail = true;
     bool alive = true;
-
-    Player(double sx, double sy, int col);
+    
+    Player(double sx, double sy);
     void init_head();    
     void start_tail();
     void finish_tail();
     void add_tail_dot();
     void move_direction(double dx, double dy);
     void die();
+    void kill(Player& prey);
     void capture_cell(Hexagon& cell);
+    bool collide(Player& enemy);
+    void show(RenderWindow& w);
 };
 
 
@@ -102,8 +107,12 @@ Hexagon& Map::nearest_cell(double px, double py) {
 
 void Map::remove_player(int pid) {
     for (auto& i:drawable)
-        if (i.owner == pid)
-            i.set_state(0);
+        if (i.owner == pid) {
+            if (i.prev_owner == pid)
+                i.set_state(0);
+            else
+                i.set_state(i.prev_owner);
+        }
 }
 
 
@@ -111,12 +120,15 @@ void Map::capture_region(Player& p) {
     for (Hexagon &i:drawable)
         if (i.owner == p.id)
             i.set_state(2*p.id);
+    p.finish_tail();
 }
 
 
 void Map::handle(Player& p) {
+    if (!p.alive)
+        return;
     Hexagon& cell = nearest_cell(p.x, p.y);
-
+    // cout << "handle " << p.id << ' ' << p.x << ' ' << p.y << '\n';
     if (cell.owner == p.id) 
     {
         if (cell.state == 0 && p.leave_tail) { 
@@ -143,36 +155,38 @@ void Map::handle(Player& p) {
 }
 
 
-void Map::handle_tail_collision(Player& hunter, Hexagon& cell) {
-
-}
-
-
-
 Map m(3);
+vector<Player> all_players;
+int my_id;
+
+void Map::handle_tail_collision(Player& hunter, Hexagon& cell) {
+    for (Player& i:all_players)
+        if (cell.owner == i.id)
+            hunter.kill(i);
+}
+    
 
 
-
-Player::Player(double sx, double sy, int col) {
+Player::Player(double sx, double sy) {
     static int id_counter = 0;
     id = ++id_counter;
     x = sx;
     y = sy;
-    color = col;
-
+    color = id % (Palette::players.size());
+    // cout << id << ' ' << color << ' ' << x << ' ' << y << '\n';
+    
     init_head();
 
     Hexagon& cell = m.nearest_cell(x, y);
     cell.set_state(id*2);
-
-    start_tail();
 }
 
 void Player::init_head() {
-    head = CircleShape(head_size, 32);
+    int thick = 5;
+    head = CircleShape(head_size-thick, 32);
     head.setFillColor(sf::Color(255, 255, 255));
-    head.setOutlineThickness(5);
-    head.setOutlineColor(list_colors[color]);
+    head.setOutlineThickness(thick);
+    head.setOutlineColor(Palette::players[color]);
     setOriginToCenter(head);
     head.setPosition(x, y);
 }
@@ -184,7 +198,8 @@ void Player::start_tail() {
 
 void Player::finish_tail() {
     leave_tail = false;
-    tail.clear();
+    first_tail_id = tail.size();
+    // tail.clear(); first_tail_id = 0;
 }
 
 
@@ -192,7 +207,7 @@ void Player::add_tail_dot() {
     if (++tail_spread_ticker == tail_spread) {
         tail_spread_ticker = 0;
         CircleShape dot(tail_size, 12);
-        dot.setFillColor(list_colors[color]);
+        dot.setFillColor(Palette::players[color]);
         setOriginToCenter(dot);
         dot.setPosition(x, y);
         tail.PB(dot);
@@ -202,7 +217,12 @@ void Player::add_tail_dot() {
 
 void Player::move_direction(double dx, double dy) {
     // dx -= x; dy -= y;
-    double d = sqrt(dx*dx + dy*dy) / (speed * speed_bonus);
+    double d = sqrt(dx*dx + dy*dy);
+    if (!d) {
+        d = 1;
+        dx = 1;
+    }
+    d /= (speed * speed_bonus);
     dx /= d; dy /= d;
     
     x += dx; y += dy;
@@ -214,19 +234,80 @@ void Player::move_direction(double dx, double dy) {
 
 
 void Player::die() {
+    cout << " -- " << id << " has die " << alive << ' ' << (this -> alive) << '\n';
+    // return;
+    this -> alive = false;
     alive = false;
-    tail.clear();
+    finish_tail();
     m.remove_player(id);
+    cout << " ++ " << id << " has die " << alive << ' ' << (this -> alive) << '\n';
+    
 }
 
 
 void Player::capture_cell(Hexagon& cell) {
-    cell.set_state(id*2 + 1);
+    if (alive)
+        leave_tail = true;
+    if (leave_tail)
+        cell.set_state(id*2 + 1);
 }
 
 
+void Player::kill(Player& prey) {
+    prey.die();
+}
 
 
+bool Player::collide(Player& enemy) {
+    double dx, dy, d;
+    dx = x - enemy.x;
+    dy = y - enemy.y;
+    d = sqrt(dx*dx + dy*dy);
+    return d < (Player::head_size*2);
+}
+
+void Player::show(RenderWindow& w) {
+    for (int i=first_tail_id; i<tail.size(); ++i)
+        w.draw(tail[i]);
+    // for (auto i:tail) 
+    //     w.draw(i);
+    w.draw(head);   
+}
+
+
+void collapse_check(Player& a, Player& b) {
+    if (!a.alive || !b.alive || a.id == b.id || !a.collide(b))
+        return;
+
+    cout << "collide!!\n";
+    // Hexagon& hi,hj;
+    auto hi = m.nearest_cell(a.x, a.y);
+    auto hj = m.nearest_cell(b.x, b.y);
+    if (hi.coord == hj.coord) {
+        if ((hi.owner == a.id && !hi.state) ||
+            (hi.prev_owner == a.id && hi.state)) {
+            a.kill(b);
+            return;
+        }
+        if ((hi.owner == b.id && !hi.state) ||
+            (hi.prev_owner == b.id && hi.state)) {
+            b.kill(a);
+            return;
+        }   
+        a.die();
+        b.die();
+        return;
+    }
+    cout << "I don't know what happening...\n";
+    a.die();
+    b.die();
+}
+
+
+int add_player(int x, int y) {
+    all_players.PB(Player(x, y));
+    return all_players.size() - 1;
+}
 
 
 int main()
@@ -247,13 +328,13 @@ int main()
     font.loadFromFile(fontFile);
     view.reset(sf::FloatRect(0, 0, SCALE * SCREEN_RATIO, SCALE));
 
-
-    m = Map(3);
-    Player p(200, 200, 1);
-    vector<Player> other_players;
-
+    my_id = add_player(200, 200);
+    add_player(500, 500);
+    
     while (window.isOpen())
     {
+        static double t = 2; t += 0.2;
+
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)            
@@ -272,30 +353,29 @@ int main()
                 
 
         sf::Vector2i cursorePosition = sf::Mouse::getPosition(window);
-        p.move_direction(
+        all_players[my_id].move_direction(
             cursorePosition.x - SCREEN_W * 0.5, 
             cursorePosition.y - SCREEN_H * 0.5);
         
-        view.setCenter(p.x, p.y);
-        m.handle(p);
+        all_players[1].move_direction(sin(t/log(t)), cos(t*t/50/log(t)));
+        
+        for (Player& i:all_players)
+            for (Player& j:all_players)
+                collapse_check(i, j);
 
+        for (Player& i:all_players)
+            m.handle(i);
+        
+        view.setCenter(all_players[my_id].x, all_players[my_id].y);
+        
         window.clear(Palette::fieldCell);
         window.setView(view);
 
-        for (auto i:m.drawable) {
+        for (auto& i:m.drawable)
             i.draw(window);
-            // continue;
-            // cout << sizeof(i) << '\n';
-            // if (i.object.getFillColor() != Palette::fieldCell)
-            //     window.draw(i.object);
-            // window.draw(i.object2);
-        }
         
-        
-        for (auto i:p.tail) 
-            window.draw(i);
-        window.draw(p.head);
-        
+        for (Player& i:all_players)
+            i.show(window);
         
         window.display();
     }

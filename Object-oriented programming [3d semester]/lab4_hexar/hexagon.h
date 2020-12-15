@@ -23,20 +23,29 @@ public:
     static const int size = 20;
     int state = 0;
     int owner = 0;
+    int prev_owner = 0;
     pair<int,int> coord;
     
     Hexagon(int x, int y) {
         coord = MP(x,y);
         owner = 0;
         state = 0;
+        prev_owner = 0;
     }
 
     void draw(RenderWindow& w) {
-        Color c = list_colors[owner];
-        if (state == 1)
-            c.a = 120;
-        if (!owner && state)
-            c = Palette::fieldBorder;
+        Color c;
+        if (!owner) {
+            if (!state)
+                c = Palette::fieldCell;
+            else
+                c = Palette::fieldBorder;
+        } else {
+            c = Palette::players[owner % Palette::players.size()];
+            if (state == 1)
+                c.a = Palette::non_captured_opacity;
+        }
+        
         CircleShape object(Hexagon::size, 6);
         object.setFillColor(c);
         object.setOutlineThickness(1.5);
@@ -54,6 +63,8 @@ public:
 
 
     void set_state(int own) {
+        if (owner != own/2)
+            prev_owner = owner;
         owner = own / 2;
         state = own % 2;
     }
