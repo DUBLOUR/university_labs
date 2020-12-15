@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 #include <SFML/Graphics.hpp>
 #include "palette.h"
+#include "hexagon.h"
 using namespace std;
 using namespace sf;
 typedef pair<double,double> PDD;
@@ -9,194 +10,248 @@ typedef pair<double,double> PDD;
 #define S second
 #define F first
 
-const int SCREEN_W = 640,
-          SCREEN_H = 480;
-const double PI = acosl(-1);
+
+const int       SCREEN_W = 720,
+                SCREEN_H = 600;
+const double    SCREEN_RATIO = (double) SCREEN_W / SCREEN_H,
+                SCALE = 1000,
+                PI = acosl(-1);
 const std::string WINDOW_NAME = "Hexar";
 
 
-template<class DRAWABLE>
-void setOriginToCenter(DRAWABLE& entity, double x=1, double y=1) {
-    sf::FloatRect r = entity.getLocalBounds();
-    entity.setOrigin(r.left + x * r.width / 2.f, 
-                     r.top + y * r.height / 2.f);
-}
-
+sf::RenderWindow window;
+sf::View view;
 sf::Font font;
-    
 
+class Hexagon;
+class Player;
 class Map {
 public:
-    
-    class Figure {
-    public:
-        CircleShape object;
-    };
-
-    class Hexagon: private Figure {
-    public:
-        int state = 0;
-        CircleShape object;
-        sf::Text object2;
-
-        Hexagon(int x, int y, sf::Color color) {
-            state = 0;
-            object = CircleShape(Map::cell_size, 6);
-            object.setFillColor(color);
-            object.setOutlineThickness(2);
-            object.setOutlineColor(Palette::fieldBg);
-            setOriginToCenter(object);
-            object.setRotation(360 / 6 / 2);
-            
-            double px,py;
-            px = x * Map::cell_size * (1 + sin(PI/6));
-            py = (y + (x&1)*0.5) * Map::cell_size * sqrt(3);
-            // px += SCREEN_W / 2.0;
-            // py += SCREEN_H / 2.0;
-            object.setPosition(px, py);
-
-
-            std::ostringstream label; 
-            label << "(" << x << ";" << y << ")";
-            
-            sf::Text text;
-            text.setFont(font);
-            text.setString(label.str());
-            text.setCharacterSize(7);
-            text.setFillColor(Color(0, 0, 0, 255));
-            text.setStyle(sf::Text::Regular);
-            setOriginToCenter(text);
-            text.setPosition(px, py);
-            object2 = text;
-
-    }
-
-
-    
-        void set_color(sf::Color color) {
-            object.setFillColor(color);
-        }
-    };
-
-
-    static const int cell_size;
-    // RenderWindow& window;
     vector<vector<int>> a;
     vector<Hexagon> drawable;
     int n;
-    
 
-    
-    Map(int sz) {
-        n = sz;
-        a.resize(n, vector<int>(n));
-        draw_map();
-    }
-
-    void draw_map() {
-        drawable.clear();
-
-        int w = 19, h = 12;
-        for (int i=1; i<=w; ++i)
-            for (int j=1; j<=h; ++j)
-                drawable.PB(Hexagon(i, j, Palette::fieldCell));
-
-    }
+    Map(int sz);
+    void draw_map();
+    Hexagon& nearest_cell(double px, double py);
+    void remove_player(int pid);
+    void capture_region(Player& p);
+    void handle(Player& p);
+    void handle_tail_collision(Player& hunter, Hexagon& cell);
 };
-
-const int Map::cell_size = 20;
-
-
 class Player {
 public:
-    const int head_size = 15;
-    const int tail_size = 4; 
+    static const int head_size = 12;
+    static const int tail_size = 4; 
     CircleShape head;
     vector<CircleShape> tail;
-    sf::Color color;
+    int color;
+    int id;
     double x,y;
     bool leave_tail = true;
-    int tail_spread = 10;
+    int tail_spread = 3;
     int tail_spread_ticker = 0;
+    double speed = 1.5*3, speed_bonus = 1.0;
+    bool alive = true;
 
-    Player(double sx, double sy, sf::Color col) {
-        x = sx;
-        y = sy;
-        color = col;
-
-        init_head();
-        start_tail();
-    }
-
-    void init_head() {
-        head = CircleShape(head_size, 32);
-        head.setFillColor(sf::Color(255, 255, 255));
-        head.setOutlineThickness(6);
-        head.setOutlineColor(color);
-        setOriginToCenter(head);
-        head.setPosition(x, y);
-    }
-
-    void start_tail() {
-        leave_tail = true;
-    }
-
-
-    void finish_tail() {
-        leave_tail = false;
-        tail.clear();
-    }
-
-
-    void add_tail_dot() {
-        if (++tail_spread_ticker == tail_spread) {
-            tail_spread_ticker = 0;
-            CircleShape dot(tail_size, 12);
-            dot.setFillColor(color);
-            setOriginToCenter(dot);
-            dot.setPosition(x, y);
-            tail.PB(dot);
-        }
-    }
-
-
-    void move_direction(double dx, double dy, double speed = 1) {
-        dx -= x; dy -= y;
-        double d = sqrt(dx*dx + dy*dy) / speed;
-        dx /= d; dy /= d;
-        
-        x += dx; y += dy;
-        head.setPosition(x, y);
-
-        if (leave_tail)
-            add_tail_dot();
-    }
+    Player(double sx, double sy, int col);
+    void init_head();    
+    void start_tail();
+    void finish_tail();
+    void add_tail_dot();
+    void move_direction(double dx, double dy);
+    void die();
+    void capture_cell(Hexagon& cell);
 };
 
-// const int Player::head_size = 15;
+
+
+Map::Map(int sz) {
+    n = sz;
+    a.resize(n, vector<int>(n));
+    draw_map();
+}
+
+
+void Map::draw_map() {
+    drawable.clear();
+
+    int w = 30, h = 30;
+    for (int i=1; i<=w; ++i)
+        for (int j=1; j<=h; ++j) {
+            drawable.PB(Hexagon(i, j));
+            if (i == 1 || i == w || j == 1 || j == h)
+                drawable.back().set_state(1);
+        }
+
+}
+
+
+Hexagon& Map::nearest_cell(double px, double py) {
+    int x = px / (Hexagon::size * 1.5) + 0.5;
+    int y = py / (Hexagon::size * sqrt(3)) + 0.5*(1 - x%2); 
+
+    pair<int,int> p = MP(x,y);
+    for (Hexagon &i:drawable)
+        if (i.coord == p) 
+            return i;
+    assert(true);
+}
+
+
+
+void Map::remove_player(int pid) {
+    for (auto& i:drawable)
+        if (i.owner == pid)
+            i.set_state(0);
+}
+
+
+void Map::capture_region(Player& p) {
+    for (Hexagon &i:drawable)
+        if (i.owner == p.id)
+            i.set_state(2*p.id);
+}
+
+
+void Map::handle(Player& p) {
+    Hexagon& cell = nearest_cell(p.x, p.y);
+
+    if (cell.owner == p.id) 
+    {
+        if (cell.state == 0 && p.leave_tail) { 
+            capture_region(p);
+            return;
+        }
+        return;
+    }
+
+    if (cell.owner == 0 && cell.state == 1) { /// border of map
+        p.die();
+        return;
+    }
+
+    if (cell.state == 0) {
+        p.capture_cell(cell);
+        return;
+    }
+
+    if (cell.state != 0) {
+        handle_tail_collision(p, cell);
+        return;
+    }
+}
+
+
+void Map::handle_tail_collision(Player& hunter, Hexagon& cell) {
+
+}
+
+
+
+Map m(3);
+
+
+
+Player::Player(double sx, double sy, int col) {
+    static int id_counter = 0;
+    id = ++id_counter;
+    x = sx;
+    y = sy;
+    color = col;
+
+    init_head();
+
+    Hexagon& cell = m.nearest_cell(x, y);
+    cell.set_state(id*2);
+
+    start_tail();
+}
+
+void Player::init_head() {
+    head = CircleShape(head_size, 32);
+    head.setFillColor(sf::Color(255, 255, 255));
+    head.setOutlineThickness(5);
+    head.setOutlineColor(list_colors[color]);
+    setOriginToCenter(head);
+    head.setPosition(x, y);
+}
+
+void Player::start_tail() {
+    leave_tail = true;
+}
+
+
+void Player::finish_tail() {
+    leave_tail = false;
+    tail.clear();
+}
+
+
+void Player::add_tail_dot() {
+    if (++tail_spread_ticker == tail_spread) {
+        tail_spread_ticker = 0;
+        CircleShape dot(tail_size, 12);
+        dot.setFillColor(list_colors[color]);
+        setOriginToCenter(dot);
+        dot.setPosition(x, y);
+        tail.PB(dot);
+    }
+}
+
+
+void Player::move_direction(double dx, double dy) {
+    // dx -= x; dy -= y;
+    double d = sqrt(dx*dx + dy*dy) / (speed * speed_bonus);
+    dx /= d; dy /= d;
+    
+    x += dx; y += dy;
+    head.setPosition(x, y);
+    
+    if (leave_tail)
+        add_tail_dot();
+}
+
+
+void Player::die() {
+    alive = false;
+    tail.clear();
+    m.remove_player(id);
+}
+
+
+void Player::capture_cell(Hexagon& cell) {
+    cell.set_state(id*2 + 1);
+}
+
+
+
+
+
 
 int main()
 {
 
     sf::ContextSettings settings;
     settings.antialiasingLevel = 8;
-    // settings.majorVersion = 2;
-    RenderWindow window(sf::VideoMode(SCREEN_W, SCREEN_H), 
-                        WINDOW_NAME, 
-                        sf::Style::Default, 
-                        settings);  
-    
+    window.create(sf::VideoMode(SCREEN_W, SCREEN_H), 
+                  WINDOW_NAME, 
+                  sf::Style::Default, 
+                  settings);  
+
     window.setVerticalSyncEnabled(true);
     // window.setFramerateLimit(60);
     
+
     string fontFile = "JetBrains_Mono.ttf";
     font.loadFromFile(fontFile);
-    
+    view.reset(sf::FloatRect(0, 0, SCALE * SCREEN_RATIO, SCALE));
 
-    Map m(3);
-    Player p(200, 200, Palette::players[0]);
-    
-    
+
+    m = Map(3);
+    Player p(200, 200, 1);
+    vector<Player> other_players;
+
     while (window.isOpen())
     {
         sf::Event event;
@@ -217,16 +272,25 @@ int main()
                 
 
         sf::Vector2i cursorePosition = sf::Mouse::getPosition(window);
-        p.move_direction(cursorePosition.x, cursorePosition.y);
+        p.move_direction(
+            cursorePosition.x - SCREEN_W * 0.5, 
+            cursorePosition.y - SCREEN_H * 0.5);
         
+        view.setCenter(p.x, p.y);
+        m.handle(p);
 
-        window.clear(Palette::fieldBg);
-        
+        window.clear(Palette::fieldCell);
+        window.setView(view);
+
         for (auto i:m.drawable) {
+            i.draw(window);
+            // continue;
             // cout << sizeof(i) << '\n';
-            window.draw(i.object);
-            window.draw(i.object2);
+            // if (i.object.getFillColor() != Palette::fieldCell)
+            //     window.draw(i.object);
+            // window.draw(i.object2);
         }
+        
         
         for (auto i:p.tail) 
             window.draw(i);
