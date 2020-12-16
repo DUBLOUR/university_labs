@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 #include <SFML/Graphics.hpp>
+#include <SFML/Network.hpp>
 #include "palette.h"
 #include "hexagon.h"
 using namespace std;
@@ -16,7 +17,7 @@ const int       SCREEN_W = 720,
 const double    SCREEN_RATIO = (double) SCREEN_W / SCREEN_H,
                 SCALE = 1000,
                 PI = acosl(-1);
-const std::string WINDOW_NAME = "Hexar";
+const std::string WINDOW_NAME = "Hexar SERVER";
 
 
 sf::RenderWindow window;
@@ -57,6 +58,7 @@ public:
     bool alive = true;
     
     Player(double sx, double sy);
+    Player();
     void init_head();    
     void start_tail();
     void finish_tail();
@@ -166,6 +168,8 @@ void Map::handle_tail_collision(Player& hunter, Hexagon& cell) {
 }
     
 
+Player::Player() {
+}
 
 Player::Player(double sx, double sy) {
     static int id_counter = 0;
@@ -303,38 +307,183 @@ void collapse_check(Player& a, Player& b) {
     b.die();
 }
 
+int rand_int(int l, int r) {
+    return rand() % (r-l+1) + l;
+}
 
-int add_player(int x, int y) {
+int add_player(int x = 0, int y = 0) {
+    if (!x && !y) {
+        x = rand_int(100, 900);
+        y = rand_int(100, 900);
+    }
     all_players.PB(Player(x, y));
     return all_players.size() - 1;
 }
 
 
-int main()
+
+/*
+
+struct PMovePack {
+    sf::Uint32 id;
+    double x,y;
+
+    PMovePack(int _id=0, double _x=0, double _y=0) {
+        id = _id;
+        x = _x;
+        y = _y;   
+    }
+};
+
+std::ostream& operator <<(std::ostream& os, const PMovePack& p) {
+    return os << p.id << p.x << p.y;
+}
+
+sf::Packet& operator <<(sf::Packet& packet, const PMovePack& p) {
+    return packet << p.id << p.x << p.y;
+}
+
+sf::Packet& operator >>(sf::Packet& packet, PMovePack& p) {
+    return packet >> p.id >> p.x >> p.y;
+}
+
+*/
+
+
+struct MovePack {
+    vector<pair<sf::Uint32,PDD>> v; 
+
+    MovePack(int n=0, int id=0, double x=0, double y=0) {
+        v.resize(n);
+        if (n) {
+            v[0].F = id;
+            v[0].S = MP(x,y);
+        }
+    }
+};
+
+std::ostream& operator <<(std::ostream& os, const MovePack& p) {
+    os << "(" << p.v.size() << "): ";
+    for (auto& i:p.v)
+        os << "{" << i.F << ' ' << i.S.F << ' ' << i.S.S << "} ";
+    return os;
+}
+
+sf::Packet& operator <<(sf::Packet& packet, const MovePack& p) {
+    packet << (sf::Uint32) p.v.size();
+    for (auto& i:p.v)
+        packet << i.F << i.S.F << i.S.S;
+    return packet;    
+}
+
+sf::Packet& operator >>(sf::Packet& packet, MovePack& p) {
+    sf::Uint32 n;
+    packet >> n;
+    p.v.resize(n);
+    for (auto& i:p.v)
+        packet >> i.F >> i.S.F >> i.S.S;
+    return packet;    
+}
+
+
+
+class Server {
+public:
+    class Client {
+    public:
+        sf::IpAddress ip;
+        int port;
+        int pid;
+
+        Client(sf::IpAddress _ip, int _port, int _pid) {
+            ip = _ip;
+            port = _port;
+            pid = _pid;
+        }
+    };
+
+    int listen_port;
+    vector<Client> clients;
+    sf::UdpSocket socket;
+    mutex lock;
+
+    Server(int port = 0) {
+        if (!port)
+            return;
+
+        listen_port = port;
+        socket.bind(listen_port);
+    }
+
+    void join_client(sf::IpAddress ip, int port, int pid) {
+        clients.PB(Client(ip, port, pid));
+    }
+
+    void listen_all() {
+        cout << "listened:\n";
+        IpAddress sender; 
+        unsigned short port; 
+        MovePack message; 
+        Packet packet;
+
+        socket.receive(packet, sender, port);
+        packet >> message;
+        cout << "(" << sender << ":" << port << ") > " << message << endl;
+
+        bool remembered = false;
+        for (auto& i:clients)
+            if (i.ip == sender && i.port == port) {
+                remembered = true;
+                break;
+            }
+
+        if (!remembered) 
+            join_client(sender, port, message.v[0].F);
+    }
+
+    void handle() {
+
+    }
+
+};
+
+void listen_clients(Server& srv) {
+    while (true)
+        srv.listen_all();
+}
+
+void listen_clients(Server& srv) {
+    while (true) {
+        srv.send_all();
+    }
+}
+
+// Server srv;
+
+
+int main(int argc, char** argv)
 {
+    int listen_port = 27900;
+    if (argc > 1)
+        listen_port = atoi(argv[1]); 
 
-    sf::ContextSettings settings;
-    settings.antialiasingLevel = 8;
-    window.create(sf::VideoMode(SCREEN_W, SCREEN_H), 
-                  WINDOW_NAME, 
-                  sf::Style::Default, 
-                  settings);  
+    Server srv(listen_port);
+    thread thr_listen(listen_clients, std::ref(srv));
+    thread thr_sender(send_clients, std::ref(srv));
+    thr_listen.detach();
+    thr_sender.detach();
 
-    window.setVerticalSyncEnabled(true);
-    // window.setFramerateLimit(60);
+    window.create(sf::VideoMode(100, 100), "Hexar SERVER", sf::Style::Default);
+    window.setFramerateLimit(60);
     
-
-    string fontFile = "JetBrains_Mono.ttf";
-    font.loadFromFile(fontFile);
-    view.reset(sf::FloatRect(0, 0, SCALE * SCREEN_RATIO, SCALE));
-
-    my_id = add_player(200, 200);
-    add_player(500, 500);
-    add_player(400, 800);
     
     while (window.isOpen())
     {
-        static double t = 2; t += 0.2;
+        static int tt=0;
+        cout << ++tt << endl;
+        sf::sleep(sf::seconds(0.1));
+        // std::this_thread::sleep_for(1s);
+        // listen_clients(srv);
 
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -345,21 +494,13 @@ int main()
         if (sf::Event::KeyReleased) {
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) || sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
                 window.close();
-            
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::F5)) {
-            }
-            
-            sf::sleep(sf::milliseconds(10));
         }
                 
+        srv.handle();
 
-        sf::Vector2i cursorePosition = sf::Mouse::getPosition(window);
-        all_players[my_id].move_direction(
-            cursorePosition.x - SCREEN_W * 0.5, 
-            cursorePosition.y - SCREEN_H * 0.5);
-        
-        all_players[1].move_direction(sin(t/log(t)), cos(t*t/50/log(t)));
-        all_players[2].move_direction(sin(t/log(t)), sin(t/20)*cos(t/50/log(t)));
+        // static double t = 2; t += 0.2;
+        // all_players[1].move_direction(sin(t/log(t)), cos(t*t/50/log(t)));
+        // all_players[2].move_direction(sin(t/log(t)), sin(t/20)*cos(t/50/log(t)));
         
         for (Player& i:all_players)
             for (Player& j:all_players)
@@ -368,18 +509,6 @@ int main()
         for (Player& i:all_players)
             m.handle(i);
         
-        view.setCenter(all_players[my_id].x, all_players[my_id].y);
-        
-        window.clear(Palette::fieldCell);
-        window.setView(view);
-
-        for (auto& i:m.drawable)
-            i.draw(window);
-        
-        for (Player& i:all_players)
-            i.show(window);
-        
-        window.display();
     }
     return 0;
 }

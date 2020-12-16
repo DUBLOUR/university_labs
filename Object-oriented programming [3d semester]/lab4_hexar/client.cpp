@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 #include <SFML/Graphics.hpp>
+#include <SFML/Network.hpp>
 #include "palette.h"
 #include "hexagon.h"
 using namespace std;
@@ -57,6 +58,7 @@ public:
     bool alive = true;
     
     Player(double sx, double sy);
+    Player();
     void init_head();    
     void start_tail();
     void finish_tail();
@@ -166,6 +168,8 @@ void Map::handle_tail_collision(Player& hunter, Hexagon& cell) {
 }
     
 
+Player::Player() {
+}
 
 Player::Player(double sx, double sy) {
     static int id_counter = 0;
@@ -234,13 +238,13 @@ void Player::move_direction(double dx, double dy) {
 
 
 void Player::die() {
-    cout << " -- " << id << " has die " << alive << ' ' << (this -> alive) << '\n';
+    // cout << " -- " << id << " has die " << alive << ' ' << (this -> alive) << '\n';
     // return;
     this -> alive = false;
     alive = false;
     finish_tail();
     m.remove_player(id);
-    cout << " ++ " << id << " has die " << alive << ' ' << (this -> alive) << '\n';
+    // cout << " ++ " << id << " has die " << alive << ' ' << (this -> alive) << '\n';
     
 }
 
@@ -303,38 +307,161 @@ void collapse_check(Player& a, Player& b) {
     b.die();
 }
 
+int rand_int(int l, int r) {
+    return rand() % (r-l+1) + l;
+}
 
-int add_player(int x, int y) {
+int add_player(int x = 0, int y = 0) {
+    if (!x && !y) {
+        x = rand_int(100, 900);
+        y = rand_int(100, 900);
+    }
     all_players.PB(Player(x, y));
     return all_players.size() - 1;
 }
 
 
-int main()
+
+
+/*
+struct PMovePack {
+    sf::Uint32 id;
+    double x,y;
+    vector<pair<sf::Uint32,PDD> v; 
+
+    PMovePack(int n = 0, int _id=0, double _x=0, double _y=0) {
+        id = _id;
+        x = _x;
+        y = _y;   
+        v.resize(n);
+    }
+};
+
+std::ostream& operator <<(std::ostream& os, const PMovePack& p) {
+    return os << p.id << p.x << p.y;
+}
+
+sf::Packet& operator <<(sf::Packet& packet, const PMovePack& p) {
+    return packet << p.id << p.x << p.y;
+}
+
+sf::Packet& operator >>(sf::Packet& packet, PMovePack& p) {
+    return packet >> p.id >> p.x >> p.y;
+}
+*/
+
+
+struct MovePack {
+    vector<pair<sf::Uint32,PDD>> v; 
+
+    MovePack(int n=0, int id=0, double x=0, double y=0) {
+        v.resize(n);
+        if (n) {
+            v[0].F = id;
+            v[0].S = MP(x,y);
+        }
+    }
+};
+
+std::ostream& operator <<(std::ostream& os, const MovePack& p) {
+    os << "(" << p.v.size() << "): ";
+    for (auto& i:p.v)
+        os << "{" << i.F << ' ' << i.S.F << ' ' << i.S.S << "} ";
+    return os;
+}
+
+sf::Packet& operator <<(sf::Packet& packet, const MovePack& p) {
+    packet << (sf::Uint32) p.v.size();
+    for (auto& i:p.v)
+        packet << i.F << i.S.F << i.S.S;
+    return packet;    
+}
+
+sf::Packet& operator >>(sf::Packet& packet, MovePack& p) {
+    sf::Uint32 n;
+    packet >> n;
+    p.v.resize(n);
+    for (auto& i:p.v)
+        packet >> i.F >> i.S.F >> i.S.S;
+    return packet;    
+}
+
+
+
+class Client {
+public:
+    sf::IpAddress server_ip;
+    int server_port;
+    int my_port;
+    UdpSocket socket_s, socket_r;
+    mutex lock;
+
+    Client() {}
+    Client(sf::IpAddress sip, int sp, int myp) {
+        server_ip = sip;
+        server_port = sp;
+        my_port = myp;
+        socket_r.bind(my_port);
+    }
+
+    void send(MovePack message) {
+        Packet packet;
+        packet << message;
+        socket_s.send(packet, server_ip, server_port);
+    }
+
+    void receive(MovePack& message) {
+        IpAddress sender; 
+        unsigned short port; 
+        Packet packet;
+
+        socket_r.receive(packet, sender, port);
+        packet >> message;
+        cout << "(" << sender << ":" << port << ") > " << message << endl;
+    }
+
+
+};
+
+void listen_server(Client& client) {
+    MovePack message;
+    while (true) {
+        client.receive(message);
+    }
+}
+
+// Server srv;
+
+
+int main(int argc, char** argv)
 {
+    int my_port = 27901;
+    sf::IpAddress server_ip("127.0.0.1");
+    int server_port = 27900;
 
-    sf::ContextSettings settings;
-    settings.antialiasingLevel = 8;
-    window.create(sf::VideoMode(SCREEN_W, SCREEN_H), 
-                  WINDOW_NAME, 
-                  sf::Style::Default, 
-                  settings);  
+    if (argc >= 3) {
+        server_ip = sf::IpAddress(argv[1]);
+        server_port = atoi(argv[2]); 
+        if (argc == 4) {
+            my_port = atoi(argv[3]); 
+        }
+    }
 
-    window.setVerticalSyncEnabled(true);
-    // window.setFramerateLimit(60);
     
 
-    string fontFile = "JetBrains_Mono.ttf";
-    font.loadFromFile(fontFile);
-    view.reset(sf::FloatRect(0, 0, SCALE * SCREEN_RATIO, SCALE));
+    Client client(server_ip, server_port, my_port);
+    thread thr_listen(listen_server, std::ref(client));
+    thr_listen.detach();
 
-    my_id = add_player(200, 200);
-    add_player(500, 500);
-    add_player(400, 800);
+/*
+    window.create(sf::VideoMode(100, 100), "Hexar SERVER", sf::Style::Default);
+    window.setFramerateLimit(60);
+    
     
     while (window.isOpen())
     {
-        static double t = 2; t += 0.2;
+        static int tt = 0;
+        client.send(MovePack(1, ++tt));
 
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -345,10 +472,48 @@ int main()
         if (sf::Event::KeyReleased) {
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) || sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
                 window.close();
-            
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::F5)) {
-            }
-            
+        }
+                
+        
+        
+    }
+    return 0;
+*/
+
+
+
+
+
+
+    sf::ContextSettings settings;
+    settings.antialiasingLevel = 8;
+    window.create(sf::VideoMode(SCREEN_W, SCREEN_H), 
+                  WINDOW_NAME, 
+                  sf::Style::Default, 
+                  settings);  
+
+    // window.setVerticalSyncEnabled(true);
+    window.setFramerateLimit(60);
+    
+
+    string fontFile = "JetBrains_Mono.ttf";
+    font.loadFromFile(fontFile);
+    view.reset(sf::FloatRect(0, 0, SCALE * SCREEN_RATIO, SCALE));
+
+    my_id = add_player(200, 200);
+    
+    while (window.isOpen())
+    {
+
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)            
+                window.close();
+        }
+        
+        if (sf::Event::KeyReleased) {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) || sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+                window.close();            
             sf::sleep(sf::milliseconds(10));
         }
                 
@@ -357,9 +522,13 @@ int main()
         all_players[my_id].move_direction(
             cursorePosition.x - SCREEN_W * 0.5, 
             cursorePosition.y - SCREEN_H * 0.5);
-        
-        all_players[1].move_direction(sin(t/log(t)), cos(t*t/50/log(t)));
-        all_players[2].move_direction(sin(t/log(t)), sin(t/20)*cos(t/50/log(t)));
+                
+        client.send(MovePack(1, my_id, all_players[my_id].x, all_players[my_id].y));
+        MovePack mess;
+        // client.receive(m);
+
+        // all_players[1].move_direction(sin(t/log(t)), cos(t*t/50/log(t)));
+        // all_players[2].move_direction(sin(t/log(t)), sin(t/20)*cos(t/50/log(t)));
         
         for (Player& i:all_players)
             for (Player& j:all_players)
