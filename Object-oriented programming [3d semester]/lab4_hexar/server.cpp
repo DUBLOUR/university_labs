@@ -69,6 +69,7 @@ public:
     void capture_cell(Hexagon& cell);
     bool collide(Player& enemy);
     void show(RenderWindow& w);
+    void move(PDD p);
 };
 
 
@@ -278,6 +279,14 @@ void Player::show(RenderWindow& w) {
     w.draw(head);   
 }
 
+void Player::move(PDD p) {
+    x = p.F; y = p.F;
+    head.setPosition(x, y);
+    
+    if (leave_tail)
+        add_tail_dot();
+}
+
 
 void collapse_check(Player& a, Player& b) {
     if (!a.alive || !b.alive || a.id == b.id || !a.collide(b))
@@ -395,55 +404,93 @@ public:
         int port;
         int pid;
 
-        Client(sf::IpAddress _ip, int _port, int _pid) {
+        Client(sf::IpAddress _ip, int _port) {
             ip = _ip;
             port = _port;
-            pid = _pid;
+            // pid = _pid;
         }
     };
 
     int listen_port;
     vector<Client> clients;
-    sf::UdpSocket socket;
-    mutex lock;
+    sf::UdpSocket socket_r,socket_s;
+    mutex mutlock;
 
     Server(int port = 0) {
         if (!port)
             return;
 
         listen_port = port;
-        socket.bind(listen_port);
+        socket_r.bind(listen_port);
     }
 
-    void join_client(sf::IpAddress ip, int port, int pid) {
-        clients.PB(Client(ip, port, pid));
+    void join_client(sf::IpAddress ip, int port) {
+        cout << ip << ' ' << port << " has joined!" << endl;
+        mutlock.lock();
+        clients.PB(Client(ip, port));
+        mutlock.unlock();
+        add_player();
+        send_all();
+
+        
     }
 
     void listen_all() {
+        mutlock.lock();
         cout << "listened:\n";
         IpAddress sender; 
         unsigned short port; 
         MovePack message; 
         Packet packet;
 
-        socket.receive(packet, sender, port);
+        socket_r.receive(packet, sender, port);
         packet >> message;
         cout << "(" << sender << ":" << port << ") > " << message << endl;
 
-        bool remembered = false;
-        for (auto& i:clients)
-            if (i.ip == sender && i.port == port) {
-                remembered = true;
-                break;
-            }
+        // bool remembered = false;
+        // for (auto& i:clients)
+        //     if (i.ip == sender && i.port == port) {
+        //         remembered = true;
+        //         break;
+        //     }
 
-        if (!remembered) 
-            join_client(sender, port, message.v[0].F);
+        if (message.v.empty()) 
+            join_client(sender, port);
+        else {
+            int id = message.v[0].F;
+            PDD p = message.v[0].S;
+            all_players[id].move(p);
+        }
+        mutlock.unlock();
     }
 
     void handle() {
 
     }
+
+    void send_all() {
+        mutlock.lock();
+        MovePack m;
+        m.v.resize(all_players.size());
+        for (int i=0; i<all_players.size(); ++i)
+            m.v[i] = MP(i, MP(all_players[i].x, all_players[i].y));
+
+        Packet packet;
+        packet << m;
+        // vector<Client> clients;
+        bool has = false;
+        for (Client& c:clients) {   
+            cout << "send {" << m << "} " << c.ip << ":" << c.port << "\n";
+            mutlock.unlock();
+            socket_s.send(packet, c.ip, c.port);
+            mutlock.lock();
+            has = true;
+        }
+        if (has)
+            cout << endl;
+        mutlock.unlock();
+    }
+
 
 };
 
@@ -452,11 +499,16 @@ void listen_clients(Server& srv) {
         srv.listen_all();
 }
 
-void listen_clients(Server& srv) {
+void send_clients(Server& srv) {
     while (true) {
         srv.send_all();
     }
 }
+
+void listen_clients_once(Server& srv)   {srv.listen_all();}
+void send_clients_once(Server& srv)     {srv.send_all();}
+
+
 
 // Server srv;
 
@@ -469,9 +521,9 @@ int main(int argc, char** argv)
 
     Server srv(listen_port);
     thread thr_listen(listen_clients, std::ref(srv));
-    thread thr_sender(send_clients, std::ref(srv));
+    // thread thr_sender(send_clients, std::ref(srv));
     thr_listen.detach();
-    thr_sender.detach();
+    // thr_sender.detach();
 
     window.create(sf::VideoMode(100, 100), "Hexar SERVER", sf::Style::Default);
     window.setFramerateLimit(60);
@@ -479,8 +531,23 @@ int main(int argc, char** argv)
     
     while (window.isOpen())
     {
+        srv.mutlock.lock();
+        if (srv.need_join) {
+            
+        }
+        srv.mutlock.unlock();
+        
+            
+        // thread thr_listen_o(listen_clients_once, std::ref(srv));
+        thread thr_sender_o(send_clients_once, std::ref(srv));
+        // thr_listen_o.detach();
+        thr_sender_o.detach();
+
+
         static int tt=0;
-        cout << ++tt << endl;
+        srv.mutlock.lock();
+        cout << ++tt << ' ' << srv.clients.size() << endl;
+        srv.mutlock.unlock();
         sf::sleep(sf::seconds(0.1));
         // std::this_thread::sleep_for(1s);
         // listen_clients(srv);

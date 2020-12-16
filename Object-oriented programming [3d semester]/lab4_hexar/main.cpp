@@ -51,7 +51,7 @@ public:
     int tail_spread_ticker = 0;
     int first_tail_id = 0;
     double x,y;
-    double speed = 1.5*3;
+    double speed = 5;
     double speed_bonus = 1.0;
     bool leave_tail = true;
     bool alive = true;
@@ -81,7 +81,7 @@ Map::Map(int sz) {
 void Map::draw_map() {
     drawable.clear();
 
-    int w = 30, h = 30;
+    int w = 40, h = 50;
     for (int i=1; i<=w; ++i)
         for (int j=1; j<=h; ++j) {
             drawable.PB(Hexagon(i, j));
@@ -108,10 +108,10 @@ Hexagon& Map::nearest_cell(double px, double py) {
 void Map::remove_player(int pid) {
     for (auto& i:drawable)
         if (i.owner == pid) {
-            if (i.prev_owner == pid)
-                i.set_state(0);
+            if (!i.state && i.prev_owner != pid)
+                i.set_state(i.prev_owner*2);
             else
-                i.set_state(i.prev_owner);
+                i.set_state(0);
         }
 }
 
@@ -359,7 +359,7 @@ int main()
             cursorePosition.y - SCREEN_H * 0.5);
         
         all_players[1].move_direction(sin(t/log(t)), cos(t*t/50/log(t)));
-        all_players[2].move_direction(sin(t/log(t)), sin(t/20)*cos(t/50/log(t)));
+        all_players[2].move_direction(sin(t/log(t)), 0.3*sin(t/20)*cos(t/50/log(t)));
         
         for (Player& i:all_players)
             for (Player& j:all_players)

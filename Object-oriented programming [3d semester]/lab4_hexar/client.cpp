@@ -69,6 +69,7 @@ public:
     void capture_cell(Hexagon& cell);
     bool collide(Player& enemy);
     void show(RenderWindow& w);
+    void move(PDD p);
 };
 
 
@@ -278,6 +279,15 @@ void Player::show(RenderWindow& w) {
     w.draw(head);   
 }
 
+void Player::move(PDD p) {
+    x = p.F; y = p.F;
+    head.setPosition(x, y);
+    
+    if (leave_tail)
+        add_tail_dot();
+}
+
+
 
 void collapse_check(Player& a, Player& b) {
     if (!a.alive || !b.alive || a.id == b.id || !a.collide(b))
@@ -323,33 +333,6 @@ int add_player(int x = 0, int y = 0) {
 
 
 
-/*
-struct PMovePack {
-    sf::Uint32 id;
-    double x,y;
-    vector<pair<sf::Uint32,PDD> v; 
-
-    PMovePack(int n = 0, int _id=0, double _x=0, double _y=0) {
-        id = _id;
-        x = _x;
-        y = _y;   
-        v.resize(n);
-    }
-};
-
-std::ostream& operator <<(std::ostream& os, const PMovePack& p) {
-    return os << p.id << p.x << p.y;
-}
-
-sf::Packet& operator <<(sf::Packet& packet, const PMovePack& p) {
-    return packet << p.id << p.x << p.y;
-}
-
-sf::Packet& operator >>(sf::Packet& packet, PMovePack& p) {
-    return packet >> p.id >> p.x >> p.y;
-}
-*/
-
 
 struct MovePack {
     vector<pair<sf::Uint32,PDD>> v; 
@@ -394,7 +377,8 @@ public:
     int server_port;
     int my_port;
     UdpSocket socket_s, socket_r;
-    mutex lock;
+    mutex mutlock;
+    MovePack last_response;
 
     Client() {}
     Client(sf::IpAddress sip, int sp, int myp) {
@@ -418,19 +402,35 @@ public:
         socket_r.receive(packet, sender, port);
         packet >> message;
         cout << "(" << sender << ":" << port << ") > " << message << endl;
+
+        mutlock.lock();
+        last_response = message;
+        mutlock.unlock();
     }
 
 
+    MovePack response() {
+        MovePack res;
+        mutlock.lock();
+        res = last_response;
+        mutlock.unlock();  
+        return res; 
+    }
+
 };
+
 
 void listen_server(Client& client) {
     MovePack message;
     while (true) {
         client.receive(message);
+        cout << message << endl;
+        sf::sleep(sf::seconds(0.01));
     }
 }
 
 // Server srv;
+
 
 
 int main(int argc, char** argv)
@@ -450,37 +450,17 @@ int main(int argc, char** argv)
     
 
     Client client(server_ip, server_port, my_port);
+
+    client.send(MovePack(0));
+    
+    cout << client.response() << '\n';
+    return 0;
+    my_id = client.response().v.size() - 1;
+    for (auto& i:client.response().v)
+        add_player(i.S.F, i.S.S);
+
     thread thr_listen(listen_server, std::ref(client));
     thr_listen.detach();
-
-/*
-    window.create(sf::VideoMode(100, 100), "Hexar SERVER", sf::Style::Default);
-    window.setFramerateLimit(60);
-    
-    
-    while (window.isOpen())
-    {
-        static int tt = 0;
-        client.send(MovePack(1, ++tt));
-
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)            
-                window.close();
-        }
-        
-        if (sf::Event::KeyReleased) {
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) || sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
-                window.close();
-        }
-                
-        
-        
-    }
-    return 0;
-*/
-
-
 
 
 
@@ -500,7 +480,7 @@ int main(int argc, char** argv)
     font.loadFromFile(fontFile);
     view.reset(sf::FloatRect(0, 0, SCALE * SCREEN_RATIO, SCALE));
 
-    my_id = add_player(200, 200);
+    // my_id = add_player(200, 200);
     
     while (window.isOpen())
     {
@@ -523,8 +503,18 @@ int main(int argc, char** argv)
             cursorePosition.x - SCREEN_W * 0.5, 
             cursorePosition.y - SCREEN_H * 0.5);
                 
-        client.send(MovePack(1, my_id, all_players[my_id].x, all_players[my_id].y));
-        MovePack mess;
+        // client.send(MovePack(1, my_id, all_players[my_id].x, all_players[my_id].y));
+
+        // if (client.last_response.v.size() != all_players.size())
+        //     for (int i=0; i<client.last_response.v.size() - all_players.size(); ++i)
+        //         add_player(client.last_response.v[i].S.F, client.last_response.v[i].S.S);
+
+        // for (int i=0; i<all_players.size(); ++i)
+        //     all_players[i].move(client.last_response.v[i].S);
+
+
+
+        // MovePack mess;
         // client.receive(m);
 
         // all_players[1].move_direction(sin(t/log(t)), cos(t*t/50/log(t)));
